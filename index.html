@@ -54,6 +54,17 @@
             padding: 15px 0;
         }
 
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-img {
+            height: 50px;
+            margin-right: 15px;
+            border-radius: 4px;
+        }
+
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
@@ -79,6 +90,16 @@
 
         nav ul li a:hover, nav ul li a.active {
             background-color: var(--accent-color);
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
         }
 
         /* Page Content */
@@ -329,6 +350,12 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         .event-card h3 {
@@ -427,11 +454,34 @@
             color: white;
         }
 
-        .footer-bottom {
-            border-top: 1px solid #444;
-            padding-top: 20px;
-            font-size: 0.9rem;
-            color: #aaa;
+        /* Scroll to Top Button */
+        .scroll-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-top:hover {
+            background-color: var(--accent-color);
         }
 
         /* Responsive Design */
@@ -457,6 +507,22 @@
             .header-content {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .menu-toggle {
+                display: block;
+                position: absolute;
+                top: 20px;
+                right: 20px;
+            }
+
+            nav {
+                width: 100%;
+                display: none;
+            }
+
+            nav.active {
+                display: block;
             }
 
             nav ul {
@@ -497,8 +563,14 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <div class="logo">CICAC</div>
-                <nav>
+                <div class="logo-container">
+                    <img src="CICAC%20LOGO.png" alt="CICAC Logo" class="logo-img">
+                    <div class="logo">CICAC</div>
+                </div>
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <nav id="mainNav">
                     <ul>
                         <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
                         <li><a href="#" class="nav-link" data-page="about">About</a></li>
@@ -816,12 +888,29 @@
         </div>
     </footer>
 
+    <!-- Scroll to Top Button -->
+    <div class="scroll-top" id="scrollTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
     <script>
         // Navigation functionality
         document.addEventListener('DOMContentLoaded', function() {
             const navLinks = document.querySelectorAll('.nav-link');
             const pages = document.querySelectorAll('.page');
+            const menuToggle = document.getElementById('menuToggle');
+            const mainNav = document.getElementById('mainNav');
+            const scrollTop = document.getElementById('scrollTop');
             
+            // Mobile menu toggle
+            menuToggle.addEventListener('click', function() {
+                mainNav.classList.toggle('active');
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            });
+            
+            // Page navigation
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -834,6 +923,12 @@
                     this.classList.add('active');
                     const pageId = this.getAttribute('data-page');
                     document.getElementById(pageId).classList.add('active');
+                    
+                    // Close mobile menu if open
+                    mainNav.classList.remove('active');
+                    const icon = menuToggle.querySelector('i');
+                    icon.classList.add('fa-bars');
+                    icon.classList.remove('fa-times');
                     
                     // Scroll to top
                     window.scrollTo(0, 0);
@@ -856,6 +951,22 @@
                     
                     // Toggle current collapsible
                     item.classList.toggle('active');
+                });
+            });
+            
+            // Scroll to top functionality
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    scrollTop.classList.add('visible');
+                } else {
+                    scrollTop.classList.remove('visible');
+                }
+            });
+            
+            scrollTop.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
                 });
             });
         });
