@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CICAC - Customs Industry Consultative and Advisory Council</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #007bff;
+            --accent-color: #004085;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --text-color: #333;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header and Navigation */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        nav ul li a:hover, nav ul li a.active {
+            background-color: var(--accent-color);
+        }
+
+        /* Page Content */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            max-width: 800px;
+        }
+
+        /* Content Sections */
+        .content-section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary-color);
+        }
+
+        /* Text Boxes */
+        .text-box {
+            background-color: var(--light-color);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .text-box h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .text-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        /* 3-Column Layout */
+        .three-column {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .column {
+            flex: 1;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .column:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .column i {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+
+        .column h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        /* Collapsible Content */
+        .collapsible {
+            background-color: var(--light-color);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            padding: 15px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .collapsible-header:hover {
+            background-color: var(--accent-color);
+        }
+
+        .collapsible-header i {
+            transition: var(--transition);
+        }
+
+        .collapsible.active .collapsible-header i {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.active .collapsible-content {
+            padding: 20px;
+            max-height: 500px;
+        }
+
+        /* Content Blocks */
+        .content-block {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+            align-items: center;
+        }
+
+        .content-block .text-content {
+            flex: 1;
+        }
+
+        .content-block.reverse {
+            flex-direction: row-reverse;
+        }
+
+        /* Video Embed */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 40px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Event Gallery */
+        .event-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .event-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .event-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        /* Form Embed */
+        .form-container {
+            background-color: var(--light-color);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+        }
+
+        .form-container iframe {
+            width: 100%;
+            min-height: 500px;
+            border: none;
+        }
+
+        /* 2-Column Layout */
+        .two-column {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .two-column .column {
+            flex: 1;
+        }
+
+        /* Blockquote */
+        blockquote {
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #555;
+        }
+
+        blockquote p {
+            font-size: 1.2rem;
+        }
+
+        blockquote cite {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 20px;
+            padding: 0 15px;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-section ul li a {
+            color: #ccc;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-section ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #444;
+            padding-top: 20px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .three-column, .two-column {
+                flex-direction: column;
+            }
+
+            .content-block {
+                flex-direction: column;
+            }
+
+            .content-block.reverse {
+                flex-direction: column;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            nav ul {
+                margin-top: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            nav ul li {
+                margin: 5px;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-banner {
+                height: 300px;
+            }
+
+            .hero-content h1 {
+                font-size: 1.5rem;
+            }
+
+            .hero-content p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">CICAC</div>
+                <nav>
+                    <ul>
+                        <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+                        <li><a href="#" class="nav-link" data-page="about">About</a></li>
+                        <li><a href="#" class="nav-link" data-page="partnership">Partnership</a></li>
+                        <li><a href="#" class="nav-link" data-page="events">Events</a></li>
+                        <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <section class="hero-banner">
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <h1>CUSTOMS INDUSTRY CONSULTATIVE AND ADVISORY COUNCIL (CICAC)</h1>
+                        <p>Partnering for Progress</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="container">
+                <section class="content-section">
+                    <h1 class="section-title">A New Era of Trade Collaboration</h1>
+                    <div class="text-box">
+                        <p>The CICAC is the vital platform institutionalized by the Bureau of Customs (BOC) under CMO No. 02-2024 to foster open dialogue, transparency, and a robust partnership between the government and trade stakeholders. Our mission is to transform customs administration through collective action and mutual accountability.</p>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Impact Highlights</h2>
+                    <div class="three-column">
+                        <div class="column">
+                            <i class="fas fa-key"></i>
+                            <h3>Policy Advocacy</h3>
+                            <p>A direct line for the private sector to recommend reforms and procedural enhancements.</p>
+                        </div>
+                        <div class="column">
+                            <i class="fas fa-handshake"></i>
+                            <h3>Partnership Growth</h3>
+                            <p>Expanded membership now including 59 Central and 122 Local member organizations.</p>
+                        </div>
+                        <div class="column">
+                            <i class="fas fa-rocket"></i>
+                            <h3>Trade Efficiency</h3>
+                            <p>Driving digitalization and streamlined processes, like the successful launch of the ATA Carnet System.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="btn-container">
+                    <a href="#" class="btn nav-link" data-page="partnership">Discover Our Initiatives</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Page -->
+        <div id="about" class="page">
+            <section class="hero-banner">
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <h1>ABOUT THE COUNCIL</h1>
+                        <p>Our Mandate & Structure</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="container">
+                <section class="content-section">
+                    <h2 class="section-title">The Bridge to Better Customs</h2>
+                    <div class="text-box">
+                        <p>The CICAC was established to serve as the consultative body between the BOC and the entire business-industrial sector. We ensure that Customs' reform agenda is responsive to the needs of trade partners and aligned with international best practices.</p>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Core Objectives</h2>
+                    <div class="collapsible active">
+                        <div class="collapsible-header">
+                            <h3>Policy & Reform</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="collapsible-content">
+                            <p>Provide policy feedback, recommend actions to prevent illicit activities, and identify procedures that are no longer aligned with modern business standards.</p>
+                        </div>
+                    </div>
+                    <div class="collapsible">
+                        <div class="collapsible-header">
+                            <h3>Information Exchange</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="collapsible-content">
+                            <p>Facilitate regular consultative meetings and dialogues to discuss trade trends, updates, and BOC programs.</p>
+                        </div>
+                    </div>
+                    <div class="collapsible">
+                        <div class="collapsible-header">
+                            <h3>Capacity Building</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="collapsible-content">
+                            <p>Aid in developing programs to incentivize stakeholder compliance and participate in corruption risk analysis.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Structure</h2>
+                    <div class="text-box">
+                        <h3>Organizational Structure</h3>
+                        <p>The Central CICAC is Chaired by the BOC Commissioner and composed of BOC officials and leading representatives from approved trade associations and compliant companies.</p>
+                        <div style="margin-top: 20px; padding: 20px; background-color: white; border-radius: 8px; text-align: center;">
+                            <h4 style="color: var(--primary-color); margin-bottom: 15px;">Central CICAC</h4>
+                            <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                                <div style="padding: 10px 20px; background-color: var(--secondary-color); color: white; border-radius: 4px;">BOC Commissioner (Chair)</div>
+                            </div>
+                            <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                                <div style="padding: 10px; margin: 5px; background-color: var(--light-color); border-radius: 4px; width: 200px;">BOC Officials</div>
+                                <div style="padding: 10px; margin: 5px; background-color: var(--light-color); border-radius: 4px; width: 200px;">Trade Association Representatives</div>
+                                <div style="padding: 10px; margin: 5px; background-color: var(--light-color); border-radius: 4px; width: 200px;">Compliant Company Representatives</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Partnership Page -->
+        <div id="partnership" class="page">
+            <section class="hero-banner">
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <h1>THE BOC PARTNERSHIP</h1>
+                        <p>Impact and Achievements</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="container">
+                <section class="content-section">
+                    <h2 class="section-title">A Whole-of-Nation Strategy</h2>
+                    <div class="text-box">
+                        <blockquote>
+                            <p>"The associations here today represent hundreds of companies... it is our duty to make sure that the decisions we make here are felt at the grassroots level."</p>
+                            <cite>– Commissioner Bienvenido Y. Rubio</cite>
+                        </blockquote>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Key Achievements</h2>
+                    <div class="content-block">
+                        <div class="text-content">
+                            <h3>ATA Carnet System Launch (July 2024)</h3>
+                            <p>A major milestone simplifying the temporary admission of goods, developed in collaboration with the Philippine Chamber of Commerce and Industry. This reduces bottlenecks and transaction costs for businesses.</p>
+                            <p><em>The "Passport for Goods" is officially launched.</em></p>
+                        </div>
+                    </div>
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/nYrQCQKdajM" title="ATA Carnet System Launch" allowfullscreen></iframe>
+                    </div>
+                    <div class="content-block reverse">
+                        <div class="text-content">
+                            <h3>Streamlining Cargo Logistics</h3>
+                            <p>Continuous proposed amendments to customs regulations are driven by CICAC recommendations, directly leading to improvements in cargo clearance efficiency and trade security.</p>
+                            <p><em>Updates on ongoing digitalization initiatives at a CICAC meeting.</em></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Recognition</h2>
+                    <div class="text-box">
+                        <h3>WCO Certificates of Merit</h3>
+                        <p>25 key CICAC member organizations were recognized with World Customs Organization Certificates of Merit for their excellence and commitment to facilitating trade and securing borders.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Events Page -->
+        <div id="events" class="page">
+            <section class="hero-banner">
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <h1>ASSEMBLIES & EVENTS</h1>
+                        <p>Visual Records</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="container">
+                <section class="content-section">
+                    <h2 class="section-title">Video Highlight</h2>
+                    <div class="text-box">
+                        <p>Watch the official highlights from the inaugural General Assembly, uniting industry stakeholders and the BOC.</p>
+                    </div>
+                    <div class="video-container">
+                        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="CICAC General Assembly Highlights" allowfullscreen></iframe>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Event Gallery</h2>
+                    <div class="event-gallery">
+                        <div class="event-card">
+                            <h3>1st CICAC Anniversary Celebration</h3>
+                            <p>Celebrating 1 year of partnership on March 14, 2025. The event marked a significant milestone in the collaboration between the Bureau of Customs and industry stakeholders.</p>
+                        </div>
+                        <div class="event-card">
+                            <h3>2nd General Assembly at ICTSI</h3>
+                            <p>Discussing the Authorized Economic Operator (AEO) program with industry leaders. Key topics included trade facilitation and security measures.</p>
+                        </div>
+                        <div class="event-card">
+                            <h3>Oathtaking of New CICAC Members</h3>
+                            <p>Expanded membership fosters stronger collaboration nationwide. The ceremony welcomed 59 Central and 122 Local member organizations.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Recent Recap</h2>
+                    <div class="text-box">
+                        <h3>6th Central CICAC Meeting Summary</h3>
+                        <p>Memorandum of Understanding signed with PCCI to enhance revenue collection and combat smuggling, reinforcing the commitment to foster collaborative efforts.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Contact Page -->
+        <div id="contact" class="page">
+            <section class="hero-banner">
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <h1>CONTACT & RESOURCES</h1>
+                        <p>Get Connected</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="container">
+                <section class="content-section">
+                    <h2 class="section-title">Inquiries</h2>
+                    <div class="form-container">
+                        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdExample/viewform?embedded=true" title="CICAC Contact Form">Loading…</iframe>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Official Links</h2>
+                    <div class="two-column">
+                        <div class="column">
+                            <a href="#" class="btn" style="width: 100%; margin-bottom: 15px;">
+                                <i class="fas fa-globe"></i> Bureau of Customs Official Website
+                            </a>
+                            <a href="#" class="btn" style="width: 100%; margin-bottom: 15px;">
+                                <i class="fab fa-facebook"></i> BOC Official Facebook Page
+                            </a>
+                        </div>
+                        <div class="column">
+                            <a href="#" class="btn" style="width: 100%; margin-bottom: 15px;">
+                                <i class="fas fa-file-alt"></i> Customs Memorandum Order (CMO 02-2024)
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">Secretariat</h2>
+                    <div class="text-box">
+                        <h3>Central CICAC Secretariat Office</h3>
+                        <p><i class="fas fa-map-marker-alt"></i> Address: Bureau of Customs Building, Manila, Philippines</p>
+                        <p><i class="fas fa-envelope"></i> Email: cicac@customs.gov.ph</p>
+                        <p><i class="fas fa-phone"></i> Phone: (02) 1234-5678</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About CICAC</h3>
+                    <p>The Customs Industry Consultative and Advisory Council (CICAC) is the vital platform institutionalized by the Bureau of Customs to foster open dialogue and partnership between the government and trade stakeholders.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#" class="nav-link" data-page="home">Home</a></li>
+                        <li><a href="#" class="nav-link" data-page="about">About</a></li>
+                        <li><a href="#" class="nav-link" data-page="partnership">Partnership</a></li>
+                        <li><a href="#" class="nav-link" data-page="events">Events</a></li>
+                        <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Connect With Us</h3>
+                    <ul>
+                        <li><a href="#"><i class="fab fa-facebook"></i> Facebook</a></li>
+                        <li><a href="#"><i class="fab fa-twitter"></i> Twitter</a></li>
+                        <li><a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
+                        <li><a href="#"><i class="fas fa-envelope"></i> Email</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Customs Industry Consultative and Advisory Council (CICAC). All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links and pages
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    pages.forEach(p => p.classList.remove('active'));
+                    
+                    // Add active class to clicked link and corresponding page
+                    this.classList.add('active');
+                    const pageId = this.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    // Scroll to top
+                    window.scrollTo(0, 0);
+                });
+            });
+            
+            // Collapsible functionality
+            const collapsibles = document.querySelectorAll('.collapsible');
+            
+            collapsibles.forEach(item => {
+                const header = item.querySelector('.collapsible-header');
+                
+                header.addEventListener('click', function() {
+                    // Close all other collapsibles
+                    collapsibles.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current collapsible
+                    item.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
