@@ -350,6 +350,50 @@
             border: none;
         }
 
+        /* HTML5 Video Container */
+        .html5-video-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 40px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .html5-video-container video {
+            width: 100%;
+            display: block;
+        }
+
+        /* Portrait Video Container */
+        .portrait-video-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .portrait-video-wrapper {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .portrait-video-wrapper iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+
+        .video-caption {
+            margin-top: 15px;
+            font-style: italic;
+            color: #555;
+            text-align: center;
+        }
+
         /* Event Gallery */
         .event-gallery {
             display: flex;
@@ -555,6 +599,10 @@
             .section-title {
                 font-size: 2rem;
             }
+
+            .portrait-video-wrapper iframe {
+                height: 500px;
+            }
         }
 
         @media (max-width: 576px) {
@@ -568,6 +616,10 @@
 
             .hero-content p {
                 font-size: 1rem;
+            }
+
+            .portrait-video-wrapper iframe {
+                height: 400px;
             }
         }
     </style>
@@ -780,12 +832,53 @@
 
             <div class="container">
                 <section class="content-section">
-                    <h2 class="section-title">Video Highlight</h2>
+                    <h2 class="section-title">BOC 123rd Anniversary</h2>
                     <div class="text-box">
-                        <p>Watch the official highlights from the inaugural General Assembly, uniting industry stakeholders and the BOC.</p>
+                        <p>#BOCConnects | President Ferdinand R. Marcos Jr. took a photo with the top officials of BOC and CICAC industry partners during the BOC 123rd anniversary celebration at the Philippine International Convention Center (PICC), highlighting the strong partnership between the government and private sector in advancing customs administration.</p>
+                    </div>
+                    <div class="html5-video-container">
+                        <video controls>
+                            <source src="https://raw.githubusercontent.com/rexorjake/cicac/b5e69e73a959f5834e299bdeb6350f745bdb2c61/photo%20op.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">First CICAC General Assembly</h2>
+                    <div class="text-box">
+                        <p>#CICACConnects | Watch the highlights from the first Customs Industry Consultative and Advisory Council General Assembly, uniting industry and trade stakeholders with the Bureau of Customs to foster mutual support and drive reform towards better Customs administration.</p>
                     </div>
                     <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="CICAC General Assembly Highlights" allowfullscreen></iframe>
+                        <iframe src="https://www.youtube.com/embed/bulqSQP8S40" title="First CICAC General Assembly Highlights" allowfullscreen></iframe>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">CICAC Second Assembly</h2>
+                    <div class="text-box">
+                        <p>#BOCConnects | The Customs Industry Consultative & Advisory Council, presided over by Commissioner Bienvenido Y. Rubio, convened its second assembly to facilitate dialogue with industry stakeholders, focusing on addressing concerns related to enhancing customs operations.</p>
+                    </div>
+                    <div class="portrait-video-container">
+                        <div class="portrait-video-wrapper">
+                            <iframe src="https://www.facebook.com/plugins/video.php?height=600&href=https%3A%2F%2Fwww.facebook.com%2Freel%2F1374361546595077&show_text=false&width=400&t=0" width="400" height="600" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe>
+                        </div>
+                    </div>
+                    <div class="video-caption">
+                        <p>#BOCConnects | The Customs Industry Consultative & Advisory Council, presided over by Commissioner Bienvenido Y. Rubio, convened its second assembly to facilitate dialogue with industry stakeholders, focusing on addressing concerns related to enhancing customs operations.</p>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <h2 class="section-title">5th CICAC Meeting</h2>
+                    <div class="text-box">
+                        <p>#CICACConnects | On July 5, 2024, the Bureau of Customs held the 5th meeting of the Customs Industry Consultative and Advisory Council (CICAC). Leading compliant corporations and foreign chambers pledged to become new members of the CICAC during the session, and top corporations signed a manifesto supporting stronger collaboration and trade facilitation with the bureau.</p>
+                    </div>
+                    <div class="html5-video-container">
+                        <video controls>
+                            <source src="https://raw.githubusercontent.com/rexorjake/cicac/b6c9c8bbc98aa1ad1b7640d7796443b0442501ba/5th%20meeting.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
                     </div>
                 </section>
 
