@@ -333,6 +333,7 @@
         /* Video Embed */
         .video-container {
             position: relative;
+            width: 100%;
             padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
@@ -363,6 +364,10 @@
         .html5-video-container video {
             width: 100%;
             display: block;
+            /* Prevent automatic fullscreen on mobile */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         /* Portrait Video Container */
@@ -379,11 +384,15 @@
             border-radius: 8px;
             box-shadow: var(--shadow);
             overflow: hidden;
+            aspect-ratio: 9/16;
         }
 
         .portrait-video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 600px;
+            height: 100%;
             border: none;
         }
 
@@ -599,10 +608,6 @@
             .section-title {
                 font-size: 2rem;
             }
-
-            .portrait-video-wrapper iframe {
-                height: 500px;
-            }
         }
 
         @media (max-width: 576px) {
@@ -616,10 +621,6 @@
 
             .hero-content p {
                 font-size: 1rem;
-            }
-
-            .portrait-video-wrapper iframe {
-                height: 400px;
             }
         }
     </style>
@@ -837,7 +838,7 @@
                         <p>#BOCConnects | President Ferdinand R. Marcos Jr. took a photo with the top officials of BOC and CICAC industry partners during the BOC 123rd anniversary celebration at the Philippine International Convention Center (PICC), highlighting the strong partnership between the government and private sector in advancing customs administration.</p>
                     </div>
                     <div class="html5-video-container">
-                        <video controls>
+                        <video controls playsinline muted preload="metadata">
                             <source src="https://raw.githubusercontent.com/rexorjake/cicac/b5e69e73a959f5834e299bdeb6350f745bdb2c61/photo%20op.mp4" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
@@ -850,7 +851,7 @@
                         <p>#CICACConnects | Watch the highlights from the first Customs Industry Consultative and Advisory Council General Assembly, uniting industry and trade stakeholders with the Bureau of Customs to foster mutual support and drive reform towards better Customs administration.</p>
                     </div>
                     <div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/bulqSQP8S40" title="First CICAC General Assembly Highlights" allowfullscreen></iframe>
+                        <iframe src="https://www.youtube.com/embed/bulqSQP8S40?rel=0&modestbranding=1" title="First CICAC General Assembly Highlights" allowfullscreen></iframe>
                     </div>
                 </section>
 
@@ -875,7 +876,7 @@
                         <p>#CICACConnects | On July 5, 2024, the Bureau of Customs held the 5th meeting of the Customs Industry Consultative and Advisory Council (CICAC). Leading compliant corporations and foreign chambers pledged to become new members of the CICAC during the session, and top corporations signed a manifesto supporting stronger collaboration and trade facilitation with the bureau.</p>
                     </div>
                     <div class="html5-video-container">
-                        <video controls>
+                        <video controls playsinline muted preload="metadata">
                             <source src="https://raw.githubusercontent.com/rexorjake/cicac/b6c9c8bbc98aa1ad1b7640d7796443b0442501ba/5th%20meeting.mp4" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
@@ -1074,6 +1075,101 @@
                     top: 0,
                     behavior: 'smooth'
                 });
+            });
+            
+            // Video autoplay/pause on scroll functionality
+            const videos = document.querySelectorAll('video');
+            const iframes = document.querySelectorAll('iframe');
+            
+            // Intersection Observer for HTML5 videos
+            const videoObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+                    
+                    if (entry.isIntersecting) {
+                        // Video is in view
+                        if (video.paused) {
+                            // Muted videos can autoplay
+                            if (video.muted) {
+                                video.play().catch(error => {
+                                    console.log('Autoplay prevented:', error);
+                                });
+                            }
+                        }
+                    } else {
+                        // Video is out of view
+                        if (!video.paused) {
+                            video.pause();
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.5 // Video is considered "in view" when 50% is visible
+            });
+            
+            // Observe all HTML5 videos
+            videos.forEach(video => {
+                videoObserver.observe(video);
+            });
+            
+            // Intersection Observer for iframe videos (YouTube, Facebook)
+            const iframeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const iframe = entry.target;
+                    
+                    if (entry.isIntersecting) {
+                        // For YouTube videos, we can send a play command via postMessage
+                        if (iframe.src.includes('youtube.com')) {
+                            try {
+                                iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                            } catch (e) {
+                                console.log('Cannot control YouTube iframe:', e);
+                            }
+                        }
+                        // For Facebook videos, autoplay is more restricted
+                        // We'll just ensure they're visible
+                    } else {
+                        // For YouTube videos, we can send a pause command via postMessage
+                        if (iframe.src.includes('youtube.com')) {
+                            try {
+                                iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                            } catch (e) {
+                                console.log('Cannot control YouTube iframe:', e);
+                            }
+                        }
+                        // For Facebook videos, pause is more restricted
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+            
+            // Observe all iframe videos
+            iframes.forEach(iframe => {
+                iframeObserver.observe(iframe);
+            });
+            
+            // Handle page visibility changes
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // Page is hidden, pause all videos
+                    videos.forEach(video => {
+                        if (!video.paused) {
+                            video.pause();
+                        }
+                    });
+                    
+                    // Pause YouTube videos
+                    iframes.forEach(iframe => {
+                        if (iframe.src.includes('youtube.com')) {
+                            try {
+                                iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                            } catch (e) {
+                                console.log('Cannot control YouTube iframe:', e);
+                            }
+                        }
+                    });
+                }
             });
         });
     </script>
