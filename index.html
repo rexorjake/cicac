@@ -119,10 +119,10 @@
             <span>SyncTimer</span>
             <span id="syncStatusPill" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
               <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-              <span id="syncStatusText">Offline</span>
+              <span id="syncStatusText">Starting...</span>
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">Multi-iPad &amp; Android Tablet Synced Timer (HTTPS Live Sync)</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block">iPad, iPhone &amp; Android Synced Timer (Auto-Live HTTPS)</p>
         </div>
       </div>
 
@@ -154,7 +154,7 @@
         <button id="fullscreenBtn" type="button" class="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors" title="Toggle Fullscreen">
           <i data-lucide="maximize-2" class="w-4 h-4"></i>
         </button>
-        <button id="helpBtn" type="button" class="px-2.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors text-xs font-semibold flex items-center gap-1.5" title="How to Sync 2 Tablets">
+        <button id="helpBtn" type="button" class="px-2.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors text-xs font-semibold flex items-center gap-1.5" title="How to Sync 2 Devices">
           <i data-lucide="help-circle" class="w-4 h-4"></i>
           <span class="hidden md:inline">Sync Guide</span>
         </button>
@@ -228,7 +228,7 @@
               <i data-lucide="hourglass" class="w-4 h-4 text-emerald-400"></i>
               Set Countdown Duration
             </h2>
-            <span class="text-xs text-slate-400">Syncs immediately to all tablets</span>
+            <span class="text-xs text-slate-400">Syncs immediately to all devices</span>
           </div>
 
           <!-- Custom H : M : S Inputs -->
@@ -282,18 +282,18 @@
         </div>
       </div>
 
-      <!-- Right Column: Multi-Tablet Sync Room & Live Messaging (5 cols) -->
+      <!-- Right Column: Multi-Device Sync Room & Live Messaging (5 cols) -->
       <div class="lg:col-span-5 flex flex-col gap-5">
 
-        <!-- Multi-Tablet Sync Room Card -->
+        <!-- Multi-Device Sync Room Card -->
         <div class="glass-card rounded-3xl p-5 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
               <i data-lucide="wifi" class="w-4 h-4 text-emerald-400"></i>
-              Tablet Sync Room
+              Device Sync Room
             </h2>
             <span id="connectedCountBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
-              0 tablets linked
+              0 devices linked
             </span>
           </div>
 
@@ -310,9 +310,12 @@
           <!-- Host Panel -->
           <div id="hostPanel">
             <div class="rounded-2xl bg-slate-950/90 border border-slate-800 p-4 text-center mb-4">
-              <div class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Room Code</div>
+              <div class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Live Room Code</div>
               <div id="hostRoomCode" class="tabular-digits text-3xl sm:text-4xl font-extrabold tracking-[0.22em] text-emerald-400 select-all">
                 ----
+              </div>
+              <div id="hostSyncActivity" class="mt-1.5 text-[11px] text-slate-400">
+                Auto-hosting over HTTPS...
               </div>
               <div class="mt-3 flex flex-wrap justify-center gap-2">
                 <button id="startHostBtn" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors">
@@ -334,16 +337,16 @@
             <div id="qrSection" class="hidden rounded-2xl bg-slate-950/70 border border-slate-800 p-3.5 mb-4 flex items-center gap-4">
               <div id="qrCodeBox" class="qr-wrapper bg-white p-2 rounded-xl shrink-0"></div>
               <div class="text-xs text-slate-300 space-y-1">
-                <div class="font-bold text-white">Scan on Tablet 2</div>
-                <p class="text-slate-400 leading-relaxed">Open your GitHub Pages link on Tablet 2 and enter code <span id="qrCodeInlineText" class="font-mono font-bold text-emerald-400">----</span> or scan this QR code.</p>
+                <div class="font-bold text-white">Scan on Device 2</div>
+                <p class="text-slate-400 leading-relaxed">Open your GitHub Pages link on your other iPad, iPhone, or Android and enter code <span id="qrCodeInlineText" class="font-mono font-bold text-emerald-400">----</span> or scan this QR code.</p>
               </div>
             </div>
 
             <!-- Two-Way Control Option -->
             <label class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 cursor-pointer mb-3">
               <div>
-                <div class="text-xs font-semibold text-slate-200">Allow Viewer Tablets to Control</div>
-                <div class="text-[11px] text-slate-400">Enable two-way start/pause from any synced tablet</div>
+                <div class="text-xs font-semibold text-slate-200">Allow Viewer Devices to Control</div>
+                <div class="text-[11px] text-slate-400">Enable two-way start/pause from any synced device</div>
               </div>
               <input id="twoWayToggle" type="checkbox" class="w-4 h-4 accent-emerald-500 rounded" />
             </label>
@@ -352,10 +355,10 @@
             <div class="rounded-xl bg-slate-950/60 border border-slate-800/80 p-3">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Connected Devices</span>
-                <span class="text-[10px] text-emerald-400/80 font-mono">HTTPS Port 443</span>
+                <span class="text-[10px] text-emerald-400/80 font-mono">HTTPS SSE + Poll</span>
               </div>
               <ul id="peerList" class="space-y-1.5 text-xs text-slate-400">
-                <li class="italic text-slate-500">Tap "Go Live &amp; Host" to start syncing over HTTPS.</li>
+                <li class="italic text-slate-500">Room is live. Enter the 4-digit code on Device 2.</li>
               </ul>
             </div>
           </div>
@@ -363,7 +366,7 @@
           <!-- Join Panel -->
           <div id="joinPanel" class="hidden">
             <div class="rounded-2xl bg-slate-950/90 border border-slate-800 p-4 mb-3">
-              <label for="joinCodeInput" class="block text-xs font-semibold text-slate-300 mb-2">Enter 4-Digit Room Code from Tablet 1</label>
+              <label for="joinCodeInput" class="block text-xs font-semibold text-slate-300 mb-2">Enter 4-Digit Room Code from Device 1</label>
               <div class="flex gap-2">
                 <input id="joinCodeInput" type="text" inputmode="numeric" maxlength="6" placeholder="e.g. 4829" class="flex-1 min-h-[48px] rounded-xl bg-slate-900 border border-slate-700 px-4 text-center text-xl font-extrabold tabular-digits tracking-[0.2em] text-white uppercase focus:outline-none focus:border-emerald-500" />
                 <button id="connectRoomBtn" type="button" class="px-5 min-h-[48px] rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition-colors">
@@ -371,7 +374,7 @@
                 </button>
               </div>
               <p id="joinStatusNote" class="mt-2.5 text-xs text-slate-400">
-                Uses standard HTTPS streaming so it works across iPads, Android tablets, and office Wi-Fi without blocking.
+                Uses HTTPS streaming plus automatic 1.5s sync check so iOS Safari and Android Chrome stay locked in sync.
               </p>
             </div>
             <div class="flex gap-2">
@@ -394,7 +397,7 @@
 
           <div class="space-y-3.5">
             <div>
-              <label for="timerLabelInput" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Timer Title (shown on all tablets)</label>
+              <label for="timerLabelInput" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Timer Title (shown on all devices)</label>
               <input id="timerLabelInput" type="text" value="Presentation Timer" maxlength="60" placeholder="e.g. Session 1 — Keynote" class="w-full h-11 rounded-xl bg-slate-950 border border-slate-800 px-3.5 text-sm text-white focus:outline-none focus:border-indigo-500" />
             </div>
 
@@ -471,7 +474,7 @@
           </div>
           <div id="viewerReadOnlyHint" class="text-xs text-slate-400 flex items-center gap-1.5">
             <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-            <span>Display locked to Controller</span>
+            <span id="viewerSyncStatusText">Display locked to Controller</span>
           </div>
           <div class="ml-auto flex items-center gap-2">
             <button id="viewerSyncNowBtn" type="button" class="hidden px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-emerald-300 transition-colors">
@@ -565,7 +568,7 @@
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
           <i data-lucide="tablet" class="w-5 h-5 text-emerald-400"></i>
-          How to Sync 2 iPads or Android Tablets
+          How to Sync iPads, iPhones &amp; Androids
         </h3>
         <button id="closeHelpBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -573,17 +576,17 @@
       </div>
       <ol class="space-y-3 text-sm text-slate-300 leading-relaxed list-decimal list-inside">
         <li>
-          <strong class="text-white">Open your GitHub Pages link on both tablets:</strong> Upload this updated <code class="text-emerald-300 font-mono text-xs">sync_timer.html</code> (or <code class="text-emerald-300 font-mono text-xs">index.html</code>) to GitHub Pages and open it in Safari on iPad or Chrome on Android.
+          <strong class="text-white">Open your GitHub Pages link on Device 1:</strong> Your 4-digit Room Code starts hosting automatically — no extra button required.
         </li>
         <li>
-          <strong class="text-white">Host on Tablet 1 (Controller):</strong> Tap <strong class="text-emerald-300">Go Live &amp; Host</strong>. It connects over standard HTTPS (port 443) so office Wi-Fi firewalls and Safari never block it.
+          <strong class="text-white">Open the same link on Device 2:</strong> Switch to <strong class="text-white">Join Room</strong>, enter the 4-digit code (or scan the QR code), and tap <strong class="text-emerald-300">Join</strong>.
         </li>
         <li>
-          <strong class="text-white">Join on Tablet 2 (Display):</strong> Switch to <strong class="text-white">Join Room</strong>, enter the 4-digit code (or scan the QR code), and tap <strong class="text-emerald-300">Join</strong>. Tablet 2 catches up immediately even if the timer is already running.
+          <strong class="text-white">Press Start on Device 1:</strong> Device 2 receives updates instantly via HTTPS streaming plus an automatic 1.5-second safety poll so Safari and Chrome never stall.
         </li>
       </ol>
       <div class="mt-4 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
-        Tip: Tap the <strong class="text-slate-200">Sun</strong> icon on your Display tablet to keep the screen awake, and tap the <strong class="text-slate-200">Speaker</strong> icon once to enable chime audio.
+        Tip: Tap the <strong class="text-slate-200">Sun</strong> icon on your Display device to keep the screen awake, and tap the <strong class="text-slate-200">Speaker</strong> icon once to enable chime audio.
       </div>
       <div class="mt-5 flex justify-end">
         <button id="closeHelpFooterBtn" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm">
@@ -599,16 +602,17 @@
 
       // -------------------- STATE MODEL --------------------
       const NTFY_BASE = 'https://ntfy.sh';
-      const TOPIC_PREFIX = 'synctimer_https_v2_room_';
-      const STORAGE_KEY = 'synctimer_prefs_v2';
+      const TOPIC_PREFIX = 'synctimer_https_v3_room_';
+      const STORAGE_KEY = 'synctimer_prefs_v3';
+      const SESSION_ROOM_KEY = 'synctimer_host_room_v3';
       const DEVICE_ID = 'dev_' + Math.random().toString(36).slice(2, 10);
 
       const state = {
         viewMode: 'controller', // 'controller' | 'viewer' | 'split'
-        syncRole: 'standalone', // 'standalone' | 'host' | 'client'
-        roomCode: generateRoomCode(),
+        syncRole: 'host', // 'host' | 'client' | 'standalone'
+        roomCode: loadOrCreateHostRoomCode(),
         seq: 0,
-        lastAppliedSeq: -1,
+        lastAppliedSentAt: 0,
 
         // Timer core
         status: 'idle', // 'idle' | 'running' | 'paused'
@@ -630,10 +634,11 @@
         endChimeFired: false
       };
 
-      // Networking handles (HTTPS SSE + Fetch fallback)
+      // Networking handles (HTTPS SSE + Always-On Safety Poll)
       let eventSource = null;
       let pollIntervalId = null;
       let lastMessageId = '';
+      const seenMessageIds = new Set();
       let connectedPeers = new Map(); // deviceId -> { name, lastSeen }
       let wakeLockSentinel = null;
       let audioCtx = null;
@@ -698,6 +703,7 @@
         hostPanel: document.getElementById('hostPanel'),
         joinPanel: document.getElementById('joinPanel'),
         hostRoomCode: document.getElementById('hostRoomCode'),
+        hostSyncActivity: document.getElementById('hostSyncActivity'),
         startHostBtn: document.getElementById('startHostBtn'),
         startHostBtnText: document.getElementById('startHostBtnText'),
         copyCodeBtn: document.getElementById('copyCodeBtn'),
@@ -727,6 +733,7 @@
         viewerStartPauseText: document.getElementById('viewerStartPauseText'),
         viewerResetBtn: document.getElementById('viewerResetBtn'),
         viewerReadOnlyHint: document.getElementById('viewerReadOnlyHint'),
+        viewerSyncStatusText: document.getElementById('viewerSyncStatusText'),
         viewerSyncNowBtn: document.getElementById('viewerSyncNowBtn'),
         viewerSwitchControllerBtn: document.getElementById('viewerSwitchControllerBtn'),
 
@@ -751,6 +758,16 @@
         return String(Math.floor(1000 + Math.random() * 9000));
       }
 
+      function loadOrCreateHostRoomCode() {
+        try {
+          const saved = sessionStorage.getItem(SESSION_ROOM_KEY);
+          if (saved && /^[0-9]{4,6}$/.test(saved)) return saved;
+        } catch (e) {}
+        const code = generateRoomCode();
+        try { sessionStorage.setItem(SESSION_ROOM_KEY, code); } catch (e) {}
+        return code;
+      }
+
       function getTopicName(code) {
         return TOPIC_PREFIX + String(code || '').replace(/[^0-9A-Za-z]/g, '').toLowerCase();
       }
@@ -758,9 +775,13 @@
       function detectDeviceName() {
         const ua = navigator.userAgent || '';
         if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
-        if (/Android/i.test(ua)) return 'Android Tablet';
         if (/iPhone/i.test(ua)) return 'iPhone';
+        if (/Android/i.test(ua)) return 'Android';
         return 'Browser Display';
+      }
+
+      function shortNowTime() {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       }
 
       function showToast(msg, type) {
@@ -927,7 +948,7 @@
         } catch (e) {}
       }
 
-      // -------------------- HTTPS LIVE SYNC ENGINE (NTFY.SH SSE + FETCH) --------------------
+      // -------------------- HTTPS LIVE SYNC ENGINE (NTFY.SH SSE + ALWAYS-ON POLL) --------------------
       function setSyncStatus(mode, label) {
         els.syncStatusText.textContent = label;
         const dot = els.syncStatusDot;
@@ -958,21 +979,36 @@
           clearInterval(pollIntervalId);
           pollIntervalId = null;
         }
+        seenMessageIds.clear();
         connectedPeers.clear();
         updatePeerListUI();
       }
 
       async function publishRoomMessage(payload) {
-        if (state.syncRole === 'standalone') return;
+        if (state.syncRole === 'standalone') return false;
         const topic = getTopicName(state.roomCode);
         const bodyStr = JSON.stringify(Object.assign({ senderId: DEVICE_ID }, payload));
         try {
-          await fetch(NTFY_BASE + '/' + encodeURIComponent(topic), {
+          const res = await fetch(NTFY_BASE + '/' + encodeURIComponent(topic), {
             method: 'POST',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
             body: bodyStr
           });
+          if (res.ok) {
+            if (state.syncRole === 'host') {
+              els.hostSyncActivity.textContent = 'Live • Last pushed at ' + shortNowTime();
+            }
+            return true;
+          }
+          if (state.syncRole === 'host') {
+            els.hostSyncActivity.textContent = 'Sync server returned HTTP ' + res.status;
+          }
+          return false;
         } catch (e) {
-          // Network unreachable in offline preview
+          if (state.syncRole === 'host') {
+            els.hostSyncActivity.textContent = 'Local preview mode (open on GitHub Pages for live sync)';
+          }
+          return false;
         }
       }
 
@@ -995,6 +1031,10 @@
       }
 
       function broadcastState() {
+        if (state.syncRole === 'standalone') {
+          state.syncRole = 'host';
+          openRoomStream(state.roomCode, 'host', false);
+        }
         const payload = buildStatePayload();
         if (state.syncRole === 'host') {
           publishRoomMessage(payload);
@@ -1019,7 +1059,15 @@
 
       function handleIncomingRoomEnvelope(envelope, isCatchup) {
         if (!envelope || envelope.event !== 'message' || !envelope.message) return;
-        if (envelope.id) lastMessageId = envelope.id;
+        if (envelope.id) {
+          if (seenMessageIds.has(envelope.id)) return;
+          seenMessageIds.add(envelope.id);
+          lastMessageId = envelope.id;
+          if (seenMessageIds.size > 400) {
+            const firstKey = seenMessageIds.values().next().value;
+            seenMessageIds.delete(firstKey);
+          }
+        }
 
         let msg = null;
         try {
@@ -1028,9 +1076,9 @@
           return;
         }
         if (!msg || typeof msg !== 'object') return;
-        if (msg.senderId === DEVICE_ID) return; // Ignore own echo
+        if (msg.senderId === DEVICE_ID) return;
 
-        // Estimate large clock drift (> 3s) using server timestamp if live
+        // Auto-correct large clock drift (> 3s) between devices using server time
         if (!isCatchup && typeof envelope.time === 'number' && state.syncRole === 'client') {
           const serverMs = envelope.time * 1000;
           const drift = serverMs - Date.now();
@@ -1042,12 +1090,12 @@
         if (state.syncRole === 'host') {
           if (msg.type === 'HELLO') {
             connectedPeers.set(msg.senderId, {
-              name: msg.deviceName || 'Tablet',
+              name: msg.deviceName || 'Device',
               lastSeen: Date.now()
             });
             updatePeerListUI();
             if (!isCatchup) {
-              showToast((msg.deviceName || 'Tablet') + ' joined Room ' + state.roomCode + '!', 'info');
+              showToast((msg.deviceName || 'Device') + ' joined Room ' + state.roomCode + '!', 'info');
               broadcastState();
             }
           } else if (msg.type === 'CMD' && state.allowViewerControl && !isCatchup) {
@@ -1058,27 +1106,33 @@
           }
         } else if (state.syncRole === 'client') {
           if (msg.type === 'STATE') {
-            applyIncomingState(msg);
+            const msgTs = typeof msg.sentAtEpochMs === 'number' ? msg.sentAtEpochMs : 0;
+            if (msgTs >= state.lastAppliedSentAt) {
+              state.lastAppliedSentAt = msgTs;
+              applyIncomingState(msg);
+              els.viewerSyncStatusText.textContent = 'Synced • Updated ' + shortNowTime();
+              els.joinStatusNote.textContent = 'Synced to Room ' + state.roomCode + ' (last update ' + shortNowTime() + ').';
+            }
           } else if (msg.type === 'FLASH' && !isCatchup) {
             triggerVisualFlash();
           }
         }
       }
 
-      async function pollLatestFromRoom(sinceParam) {
+      async function pollLatestFromRoom(sinceParam, isCatchup) {
         if (state.syncRole === 'standalone') return false;
         const topic = getTopicName(state.roomCode);
-        const since = sinceParam || (lastMessageId ? lastMessageId : '20m');
+        const since = sinceParam || (lastMessageId ? lastMessageId : '10m');
         const url = NTFY_BASE + '/' + encodeURIComponent(topic) + '/json?poll=1&since=' + encodeURIComponent(since);
         try {
-          const res = await fetch(url);
+          const res = await fetch(url, { cache: 'no-store' });
           if (!res.ok) return false;
           const text = await res.text();
           const lines = text.split('\n').filter((l) => l.trim().length > 0);
           lines.forEach((line) => {
             try {
               const env = JSON.parse(line);
-              handleIncomingRoomEnvelope(env, true);
+              handleIncomingRoomEnvelope(env, !!isCatchup);
             } catch (e) {}
           });
           return true;
@@ -1091,19 +1145,41 @@
         stopNetworkSync();
         state.roomCode = code;
         state.syncRole = role;
+        state.lastAppliedSentAt = 0;
         lastMessageId = '';
 
         const topic = getTopicName(code);
         const sseUrl = NTFY_BASE + '/' + encodeURIComponent(topic) + '/sse?since=10m';
 
-        setSyncStatus('connecting', role === 'host' ? 'Starting Room...' : 'Connecting...');
+        setSyncStatus('connecting', role === 'host' ? 'Connecting...' : 'Joining ' + code + '...');
 
-        // Start EventSource (HTTPS Port 443)
+        if (role === 'host') {
+          els.viewerRoomTag.textContent = 'Host • Room ' + code;
+          renderQRCode();
+          updatePeerListUI();
+        } else {
+          els.viewerRoomTag.textContent = 'Synced • Room ' + code;
+          els.manualSyncBtn.classList.remove('hidden');
+          els.disconnectRoomBtn.classList.remove('hidden');
+          els.viewerSyncNowBtn.classList.remove('hidden');
+        }
+
+        // Immediate catch-up fetch so Device 2 gets current state right away
+        pollLatestFromRoom('10m', true);
+
+        // Always-on lightweight safety poll (1.5s for client, 3s for host) so Safari/Chrome proxies never stall SSE
+        const pollMs = role === 'client' ? 1500 : 3000;
+        pollIntervalId = setInterval(() => {
+          if (state.syncRole !== 'standalone') {
+            pollLatestFromRoom(lastMessageId || '2m', false);
+          }
+        }, pollMs);
+
+        // Open real-time SSE stream for instant (<200ms) push
         try {
           eventSource = new EventSource(sseUrl);
         } catch (e) {
-          setSyncStatus('connecting', 'Polling Mode');
-          startPollingFallback();
+          setSyncStatus('live', (role === 'host' ? 'Hosting ' : 'Synced • ') + code);
           return;
         }
 
@@ -1114,28 +1190,21 @@
           openedOnce = true;
           if (role === 'host') {
             setSyncStatus('live', 'Hosting ' + code);
-            els.startHostBtnText.textContent = 'Room Live (' + code + ')';
-            els.viewerRoomTag.textContent = 'Host • Room ' + code;
-            renderQRCode();
-            updatePeerListUI();
+            els.startHostBtnText.textContent = 'Push Sync Now';
+            els.hostSyncActivity.textContent = 'Live • Room ' + code + ' ready for Device 2';
             if (firstOpen) {
               broadcastState();
-              showToast('Room ' + code + ' is live! Enter ' + code + ' on Tablet 2.', 'info');
             }
           } else {
             setSyncStatus('live', 'Synced • ' + code);
-            els.viewerRoomTag.textContent = 'Synced • Room ' + code;
-            els.joinStatusNote.textContent = 'Connected to Room ' + code + ' over HTTPS. Receiving live updates.';
-            els.manualSyncBtn.classList.remove('hidden');
-            els.disconnectRoomBtn.classList.remove('hidden');
-            els.viewerSyncNowBtn.classList.remove('hidden');
+            els.joinStatusNote.textContent = 'Connected to Room ' + code + '. Listening for Host updates...';
             if (firstOpen) {
               publishRoomMessage({
                 type: 'HELLO',
                 deviceName: detectDeviceName(),
                 sentAtEpochMs: Date.now()
               });
-              showToast('Synced to Room ' + code + '!', 'info');
+              showToast('Connected to Room ' + code + '!', 'info');
               if (switchToViewerOnConnect) setViewMode('viewer');
             }
           }
@@ -1149,31 +1218,16 @@
         };
 
         eventSource.onerror = () => {
-          // EventSource auto-retries; also enable light polling fallback so Safari never stalls
           if (!openedOnce) {
-            setSyncStatus('connecting', 'Syncing (HTTPS)...');
+            setSyncStatus('connecting', 'Polling ' + code);
           }
-          startPollingFallback();
         };
-      }
-
-      function startPollingFallback() {
-        if (pollIntervalId) return;
-        pollIntervalId = setInterval(() => {
-          if (state.syncRole !== 'standalone') {
-            pollLatestFromRoom(lastMessageId || '5m');
-          }
-        }, 2500);
-      }
-
-      function startHostingRoom() {
-        openRoomStream(state.roomCode, 'host', false);
       }
 
       function joinRoomByCode(rawCode, switchToViewer) {
         const code = String(rawCode || '').replace(/[^0-9A-Za-z]/g, '').trim();
         if (code.length < 4) {
-          showToast('Please enter the 4-digit Room Code from Tablet 1.', 'warn');
+          showToast('Please enter the 4-digit Room Code from Device 1.', 'warn');
           return;
         }
         els.joinCodeInput.value = code;
@@ -1182,16 +1236,17 @@
 
       function disconnectFromRoom() {
         stopNetworkSync();
-        state.syncRole = 'standalone';
+        state.syncRole = 'host';
+        state.roomCode = loadOrCreateHostRoomCode();
         state.clockOffsetMs = 0;
         els.disconnectRoomBtn.classList.add('hidden');
         els.manualSyncBtn.classList.add('hidden');
         els.viewerSyncNowBtn.classList.add('hidden');
-        els.viewerRoomTag.textContent = 'Local Display';
-        setSyncStatus('offline', 'Offline');
         els.joinStatusNote.textContent = 'Disconnected. Enter a Room Code to join again.';
+        els.tabHostBtn.click();
+        openRoomStream(state.roomCode, 'host', false);
         renderStaticControls();
-        showToast('Disconnected from room.', 'info');
+        showToast('Returned to Host mode (Room ' + state.roomCode + ').', 'info');
       }
 
       function buildShareUrl() {
@@ -1231,14 +1286,12 @@
 
       function updatePeerListUI() {
         const count = connectedPeers.size;
-        els.connectedCountBadge.textContent = count === 1 ? '1 tablet linked' : count + ' tablets linked';
+        els.connectedCountBadge.textContent = count === 1 ? '1 device linked' : count + ' devices linked';
         els.peerList.innerHTML = '';
         if (count === 0) {
           const li = document.createElement('li');
           li.className = 'italic text-slate-500';
-          li.textContent = state.syncRole === 'host'
-            ? 'Room ' + state.roomCode + ' is live. Enter ' + state.roomCode + ' on Tablet 2.'
-            : 'Tap "Go Live & Host" to start syncing over HTTPS.';
+          li.textContent = 'Room ' + state.roomCode + ' is live. Enter ' + state.roomCode + ' on Device 2.';
           els.peerList.appendChild(li);
           return;
         }
@@ -1370,7 +1423,7 @@
       function initBroadcastChannel() {
         if (typeof BroadcastChannel === 'undefined') return;
         try {
-          localChannel = new BroadcastChannel('synctimer_local_sync_v2');
+          localChannel = new BroadcastChannel('synctimer_local_sync_v3');
           localChannel.onmessage = (event) => {
             const data = event.data;
             if (!data || !data.payload) return;
@@ -1389,7 +1442,7 @@
       // -------------------- WAKE LOCK & FULLSCREEN --------------------
       async function toggleWakeLock() {
         if (!('wakeLock' in navigator)) {
-          showToast('Screen Wake Lock is not supported in this browser. Set iPad Auto-Lock to Never if needed.', 'warn');
+          showToast('Screen Wake Lock is not supported in this browser. Set Auto-Lock to Never if needed.', 'warn');
           return;
         }
         if (wakeLockSentinel) {
@@ -1403,7 +1456,7 @@
             wakeLockSentinel = await navigator.wakeLock.request('screen');
             state.wakeLockActive = true;
             els.wakeLockBtn.classList.add('text-amber-300', 'border-amber-500/50');
-            showToast('Screen will stay awake on this tablet.', 'info');
+            showToast('Screen will stay awake on this device.', 'info');
             wakeLockSentinel.addEventListener('release', () => {
               state.wakeLockActive = false;
               els.wakeLockBtn.classList.remove('text-amber-300', 'border-amber-500/50');
@@ -1658,7 +1711,7 @@
           state.message = els.liveMessageInput.value.trim();
           renderStaticControls();
           broadcastState();
-          if (state.message) showToast('Broadcasted cue to synced tablets.', 'info');
+          if (state.message) showToast('Broadcasted cue to synced devices.', 'info');
         });
 
         els.clearMessageBtn.addEventListener('click', () => {
@@ -1697,7 +1750,14 @@
           els.tabHostBtn.className = 'py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-colors';
         });
 
-        els.startHostBtn.addEventListener('click', startHostingRoom);
+        els.startHostBtn.addEventListener('click', () => {
+          if (state.syncRole !== 'host') {
+            openRoomStream(state.roomCode, 'host', false);
+          } else {
+            broadcastState();
+            showToast('Pushed current timer state to Room ' + state.roomCode + '.', 'info');
+          }
+        });
         els.copyCodeBtn.addEventListener('click', () => copyText(state.roomCode, 'Room Code'));
         els.copyLinkBtn.addEventListener('click', () => copyText(buildShareUrl(), 'Invite Link'));
 
@@ -1714,16 +1774,16 @@
         els.disconnectRoomBtn.addEventListener('click', disconnectFromRoom);
 
         const handleManualSync = async () => {
-          const ok = await pollLatestFromRoom('20m');
+          const ok = await pollLatestFromRoom('10m', false);
           showToast(ok ? 'Synced with latest timer state.' : 'Could not reach sync server.', ok ? 'info' : 'warn');
         };
         els.manualSyncBtn.addEventListener('click', handleManualSync);
         els.viewerSyncNowBtn.addEventListener('click', handleManualSync);
 
-        // Auto re-sync when tablet wakes up from sleep
+        // Auto re-sync when device wakes up from sleep
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible' && state.syncRole !== 'standalone') {
-            pollLatestFromRoom('10m');
+            pollLatestFromRoom('10m', false);
           }
         });
 
@@ -1772,17 +1832,23 @@
           lucide.createIcons();
         }
 
-        // Check URL params (?room=4829&role=viewer) for QR / Invite Link auto-join
+        // Check URL params (?room=4829&role=viewer) for QR / Invite Link auto-join; otherwise auto-host immediately
+        let joinedFromUrl = false;
         try {
           const params = new URLSearchParams(window.location.search);
           const urlRoom = params.get('room');
           const urlRole = params.get('role');
           if (urlRoom) {
+            joinedFromUrl = true;
             els.tabJoinBtn.click();
             els.joinCodeInput.value = urlRoom;
             joinRoomByCode(urlRoom, urlRole === 'viewer');
           }
         } catch (e) {}
+
+        if (!joinedFromUrl) {
+          openRoomStream(state.roomCode, 'host', false);
+        }
 
         if (rafId) cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(renderTick);
