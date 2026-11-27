@@ -3,21 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SyncTimer — Multi-Tablet Synced Countdown</title>
+  <title>SyncTimer — Firebase Cloud-Synced Multi-Device Timer</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap');
 
     :root {
       --bg-base: #070b14;
       --bg-surface: #0f172a;
-      --bg-elevated: #162036;
       --border-subtle: rgba(148, 163, 184, 0.16);
-      --accent-run: #10b981;
-      --accent-warn: #f59e0b;
-      --accent-crit: #ef4444;
     }
 
     * {
@@ -100,7 +98,7 @@
 </head>
 <body class="bg-[#070b14] text-slate-100 antialiased selection:bg-emerald-500/30">
 
-  <!-- Flash Overlay for Viewer/Controller Alerts -->
+  <!-- Flash Overlay -->
   <div id="flashOverlay" class="pointer-events-none fixed inset-0 z-50 transition-opacity"></div>
 
   <!-- Toast Container -->
@@ -117,12 +115,12 @@
         <div class="leading-tight">
           <div class="font-bold text-sm sm:text-base tracking-tight text-white flex items-center gap-2">
             <span>SyncTimer</span>
-            <span id="syncStatusPill" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-              <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-              <span id="syncStatusText">Starting...</span>
+            <span id="syncStatusPill" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/40">
+              <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span id="syncStatusText">Setup Firebase</span>
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">iPad, iPhone &amp; Android Synced Timer (Clock-Drift-Free)</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Firebase Realtime DB &bull; Server-Time Sync</p>
         </div>
       </div>
 
@@ -148,15 +146,15 @@
         <button id="soundToggleBtn" type="button" class="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors" title="Toggle Chime Sound">
           <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4"></i>
         </button>
-        <button id="wakeLockBtn" type="button" class="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors" title="Keep Tablet Screen Awake">
+        <button id="wakeLockBtn" type="button" class="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors" title="Keep Screen Awake">
           <i data-lucide="sun" class="w-4 h-4"></i>
         </button>
         <button id="fullscreenBtn" type="button" class="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors" title="Toggle Fullscreen">
           <i data-lucide="maximize-2" class="w-4 h-4"></i>
         </button>
-        <button id="helpBtn" type="button" class="px-2.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors text-xs font-semibold flex items-center gap-1.5" title="How to Sync 2 Devices">
+        <button id="helpBtn" type="button" class="px-2.5 py-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors text-xs font-semibold flex items-center gap-1.5" title="Firebase Setup Guide">
           <i data-lucide="help-circle" class="w-4 h-4"></i>
-          <span class="hidden md:inline">Sync Guide</span>
+          <span class="hidden md:inline">Firebase Setup</span>
         </button>
       </div>
     </div>
@@ -179,9 +177,12 @@
               <span id="stateBadge" class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">Ready</span>
               <span id="controllerLabelPreview" class="text-sm sm:text-base font-medium text-slate-300 truncate">Presentation Timer</span>
             </div>
-            <div class="text-xs text-slate-400 tabular-digits flex items-center gap-1.5">
-              <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-              <span id="localClockDisplay">--:--:--</span>
+            <div class="text-xs text-slate-400 tabular-digits flex items-center gap-2">
+              <span id="offsetBadge" class="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-[11px] text-slate-400">Offset: --</span>
+              <span class="flex items-center gap-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span id="localClockDisplay">--:--:--</span>
+              </span>
             </div>
           </div>
 
@@ -191,7 +192,7 @@
               05:00
             </div>
             <div id="controllerSubStatus" class="mt-2 text-xs sm:text-sm text-slate-400 font-medium">
-              Target duration: 05:00 &bull; Warning at 01:00
+              Target: 05:00 &bull; Amber at 01:00 &bull; Red at 00:15
             </div>
           </div>
 
@@ -228,7 +229,7 @@
               <i data-lucide="hourglass" class="w-4 h-4 text-emerald-400"></i>
               Set Countdown Duration
             </h2>
-            <span class="text-xs text-slate-400">Syncs immediately to all devices</span>
+            <span class="text-xs text-slate-400">Instant WebSocket sync</span>
           </div>
 
           <!-- Custom H : M : S Inputs -->
@@ -282,19 +283,36 @@
         </div>
       </div>
 
-      <!-- Right Column: Multi-Device Sync Room & Live Messaging (5 cols) -->
+      <!-- Right Column: Firebase Cloud Sync Room & Live Messaging (5 cols) -->
       <div class="lg:col-span-5 flex flex-col gap-5">
 
-        <!-- Multi-Device Sync Room Card -->
+        <!-- Firebase Cloud Sync Room Card -->
         <div class="glass-card rounded-3xl p-5 sm:p-6">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <i data-lucide="wifi" class="w-4 h-4 text-emerald-400"></i>
-              Device Sync Room
+              <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
+              Firebase Cloud Sync
             </h2>
             <span id="connectedCountBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
               0 devices linked
             </span>
+          </div>
+
+          <!-- One-Time Firebase Database URL Bar -->
+          <div class="rounded-2xl bg-slate-950/90 border border-slate-800 p-3 mb-4">
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="firebaseUrlInput" class="text-[11px] font-semibold uppercase tracking-wider text-amber-300">Firebase Realtime DB URL</label>
+              <button id="openSetupLinkBtn" type="button" class="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 underline">2-min Setup Guide</button>
+            </div>
+            <div class="flex gap-2">
+              <input id="firebaseUrlInput" type="url" placeholder="https://your-project-default-rtdb.firebaseio.com" class="flex-1 h-10 rounded-xl bg-slate-900 border border-slate-700 px-3 text-xs font-mono text-white focus:outline-none focus:border-emerald-500" />
+              <button id="saveFirebaseBtn" type="button" class="px-3.5 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shrink-0 transition-colors">
+                Connect
+              </button>
+            </div>
+            <p id="firebaseStatusHint" class="mt-1.5 text-[11px] text-slate-400">
+              Paste your free Firebase Realtime Database URL once (or hardcode it in the HTML).
+            </p>
           </div>
 
           <!-- Host / Join Toggle -->
@@ -310,12 +328,12 @@
           <!-- Host Panel -->
           <div id="hostPanel">
             <div class="rounded-2xl bg-slate-950/90 border border-slate-800 p-4 text-center mb-4">
-              <div class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Live Room Code</div>
+              <div class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Room Code</div>
               <div id="hostRoomCode" class="tabular-digits text-3xl sm:text-4xl font-extrabold tracking-[0.22em] text-emerald-400 select-all">
                 ----
               </div>
               <div id="hostSyncActivity" class="mt-1.5 text-[11px] text-slate-400">
-                Auto-hosting over HTTPS...
+                Enter your Firebase URL above to go live.
               </div>
               <div class="mt-3 flex flex-wrap justify-center gap-2">
                 <button id="startHostBtn" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors">
@@ -333,12 +351,12 @@
               </div>
             </div>
 
-            <!-- QR Code Container (visible when hosted) -->
+            <!-- QR Code Container -->
             <div id="qrSection" class="hidden rounded-2xl bg-slate-950/70 border border-slate-800 p-3.5 mb-4 flex items-center gap-4">
               <div id="qrCodeBox" class="qr-wrapper bg-white p-2 rounded-xl shrink-0"></div>
               <div class="text-xs text-slate-300 space-y-1">
                 <div class="font-bold text-white">Scan on Device 2</div>
-                <p class="text-slate-400 leading-relaxed">Open your GitHub Pages link on your other iPad, iPhone, or Android and enter code <span id="qrCodeInlineText" class="font-mono font-bold text-emerald-400">----</span> or scan this QR code.</p>
+                <p class="text-slate-400 leading-relaxed">Scanning this QR code auto-configures Firebase and joins Room <span id="qrCodeInlineText" class="font-mono font-bold text-emerald-400">----</span> in one tap!</p>
               </div>
             </div>
 
@@ -346,7 +364,7 @@
             <label class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-950/70 border border-slate-800 cursor-pointer mb-3">
               <div>
                 <div class="text-xs font-semibold text-slate-200">Allow Viewer Devices to Control</div>
-                <div class="text-[11px] text-slate-400">Enable two-way start/pause from any synced device</div>
+                <div class="text-[11px] text-slate-400">Enable two-way start/pause/reset from any synced device</div>
               </div>
               <input id="twoWayToggle" type="checkbox" class="w-4 h-4 accent-emerald-500 rounded" />
             </label>
@@ -354,11 +372,11 @@
             <!-- Connected Devices List -->
             <div class="rounded-xl bg-slate-950/60 border border-slate-800/80 p-3">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Connected Devices</span>
-                <span class="text-[10px] text-emerald-400/80 font-mono">Relative-Time Sync</span>
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Live Connected Devices</span>
+                <span class="text-[10px] text-emerald-400/80 font-mono">WebSocket + NTP</span>
               </div>
               <ul id="peerList" class="space-y-1.5 text-xs text-slate-400">
-                <li class="italic text-slate-500">Room is live. Enter the 4-digit code on Device 2.</li>
+                <li class="italic text-slate-500">Connect Firebase above to see live synced devices.</li>
               </ul>
             </div>
           </div>
@@ -374,7 +392,7 @@
                 </button>
               </div>
               <p id="joinStatusNote" class="mt-2.5 text-xs text-slate-400">
-                Uses relative remaining-time sync so differing device clocks never offset your countdown.
+                Syncs via Firebase WebSocket + server clock offset (identical to Chronograph.io).
               </p>
             </div>
             <div class="flex gap-2">
@@ -562,13 +580,13 @@
 
   </main>
 
-  <!-- Sync Guide Modal -->
+  <!-- Firebase 2-Minute Setup Modal -->
   <div id="helpModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="glass-card rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700">
+    <div class="glass-card rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-700 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i data-lucide="tablet" class="w-5 h-5 text-emerald-400"></i>
-          How to Sync iPads, iPhones &amp; Androids
+          <i data-lucide="flame" class="w-5 h-5 text-amber-400"></i>
+          2-Minute Free Firebase Setup
         </h3>
         <button id="closeHelpBtn" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
@@ -576,17 +594,20 @@
       </div>
       <ol class="space-y-3 text-sm text-slate-300 leading-relaxed list-decimal list-inside">
         <li>
-          <strong class="text-white">Open your GitHub Pages link on Device 1:</strong> Your 4-digit Room Code starts hosting automatically.
+          Go to <strong class="text-emerald-300">console.firebase.google.com</strong>, sign in with Google, and click <strong class="text-white">Create a project</strong> (disable Google Analytics).
         </li>
         <li>
-          <strong class="text-white">Open the same link on Device 2:</strong> Switch to <strong class="text-white">Join Room</strong>, enter the 4-digit code (or scan the QR code), and tap <strong class="text-emerald-300">Join</strong>.
+          In the left sidebar, open <strong class="text-white">Build &rarr; Realtime Database</strong>, click <strong class="text-white">Create Database</strong>, pick <strong class="text-white">Singapore</strong> (or nearest region), and choose <strong class="text-emerald-300">Start in test mode</strong>.
         </li>
         <li>
-          <strong class="text-white">Clock-drift-free sync:</strong> SyncTimer sends exact remaining duration (not raw device clock timestamps) and queues every Start, Pause, and Reset in strict order so both devices match even if their system clocks differ.
+          Copy the database URL at the top of the Data tab (looks like <code class="text-amber-300 font-mono text-xs">https://your-app-default-rtdb.asia-southeast1.firebasedatabase.app</code>).
+        </li>
+        <li>
+          <strong class="text-white">Paste it in the box</strong> on Device 1 (or hardcode it once into <code class="text-emerald-300 font-mono text-xs">DEFAULT_FIREBASE_DATABASE_URL</code> in <code class="text-emerald-300 font-mono text-xs">sync_timer.html</code> on GitHub Pages so every device connects automatically).
         </li>
       </ol>
       <div class="mt-4 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
-        Tip: Tap the <strong class="text-slate-200">Sun</strong> icon on your Display device to keep the screen awake, and tap the <strong class="text-slate-200">Speaker</strong> icon once to enable chime audio.
+        Note: Firebase Test Mode rules expire after 30 days. To keep it running permanently, open the <strong class="text-slate-200">Rules</strong> tab in Firebase Realtime Database and set <code class="text-emerald-300 font-mono">{ "rules": { "rooms": { ".read": true, ".write": true } } }</code>.
       </div>
       <div class="mt-5 flex justify-end">
         <button id="closeHelpFooterBtn" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm">
@@ -600,27 +621,31 @@
     (function () {
       'use strict';
 
-      // -------------------- STATE MODEL --------------------
-      const NTFY_BASE = 'https://ntfy.sh';
-      const TOPIC_PREFIX = 'synctimer_https_v4_room_';
-      const STORAGE_KEY = 'synctimer_prefs_v4';
-      const SESSION_ROOM_KEY = 'synctimer_host_room_v4';
+      // =========================================================================
+      // OPTIONAL: Paste your Firebase Realtime Database URL right here once
+      // before uploading to GitHub Pages so ALL tablets connect automatically!
+      // Example: 'https://my-timer-default-rtdb.asia-southeast1.firebasedatabase.app'
+      // =========================================================================
+      const DEFAULT_FIREBASE_DATABASE_URL = '';
+
+      const STORAGE_KEY = 'synctimer_fb_prefs_v1';
+      const FB_URL_STORAGE_KEY = 'synctimer_fb_db_url_v1';
+      const SESSION_ROOM_KEY = 'synctimer_fb_room_v1';
       const DEVICE_ID = 'dev_' + Math.random().toString(36).slice(2, 10);
-      const HOST_SESSION_ID = 'hs_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
 
       const state = {
         viewMode: 'controller', // 'controller' | 'viewer' | 'split'
-        syncRole: 'host', // 'host' | 'client' | 'standalone'
+        syncRole: 'host',       // 'host' | 'client' | 'standalone'
         roomCode: loadOrCreateHostRoomCode(),
-        seq: 0,
-        lastAppliedSessionId: '',
-        lastAppliedSeq: -1,
+        firebaseUrl: '',
+        firebaseConnected: false,
+        serverOffsetMs: 0,      // Firebase /.info/serverTimeOffset (NTP-accurate!)
 
-        // Timer core (targetEndLocalMs ALWAYS uses THIS device's own Date.now()!)
-        status: 'idle', // 'idle' | 'running' | 'paused'
+        // Timer core (targetEndServerMs is ALWAYS in Firebase Server Time!)
+        status: 'idle',         // 'idle' | 'running' | 'paused'
         durationMs: 5 * 60 * 1000,
         remainingMs: 5 * 60 * 1000,
-        targetEndLocalMs: null,
+        targetEndServerMs: null,
         label: 'Presentation Timer',
         message: '',
         warnSec: 60,
@@ -631,18 +656,21 @@
         // Local device preferences
         soundEnabled: true,
         wakeLockActive: false,
-        serverClockOffsetMs: null, // serverEpochMs - localEpochMs (from ntfy open/keepalive)
         warnChimeFired: false,
-        endChimeFired: false
+        endChimeFired: false,
+        lastFlashTs: 0
       };
 
-      // Networking handles (HTTPS SSE + Serialized Publish Queue + Safety Poll)
-      let eventSource = null;
-      let pollIntervalId = null;
-      const seenMessageIds = new Set();
-      let connectedPeers = new Map();
-      let publishInFlight = false;
-      let pendingStatePayload = null;
+      // Firebase handles
+      let fbApp = null;
+      let fbDb = null;
+      let roomStateRef = null;
+      let roomFlashRef = null;
+      let roomPeersRef = null;
+      let myPeerRef = null;
+      let offsetRef = null;
+      let connectedRef = null;
+
       let wakeLockSentinel = null;
       let audioCtx = null;
       let qrInstance = null;
@@ -669,6 +697,7 @@
         wakeLockBtn: document.getElementById('wakeLockBtn'),
         fullscreenBtn: document.getElementById('fullscreenBtn'),
         helpBtn: document.getElementById('helpBtn'),
+        openSetupLinkBtn: document.getElementById('openSetupLinkBtn'),
         helpModal: document.getElementById('helpModal'),
         closeHelpBtn: document.getElementById('closeHelpBtn'),
         closeHelpFooterBtn: document.getElementById('closeHelpFooterBtn'),
@@ -676,6 +705,7 @@
         controllerTimerCard: document.getElementById('controllerTimerCard'),
         stateBadge: document.getElementById('stateBadge'),
         controllerLabelPreview: document.getElementById('controllerLabelPreview'),
+        offsetBadge: document.getElementById('offsetBadge'),
         localClockDisplay: document.getElementById('localClockDisplay'),
         controllerTimeDisplay: document.getElementById('controllerTimeDisplay'),
         controllerSubStatus: document.getElementById('controllerSubStatus'),
@@ -697,6 +727,9 @@
         clearMessageBtn: document.getElementById('clearMessageBtn'),
         flashAlertBtn: document.getElementById('flashAlertBtn'),
 
+        firebaseUrlInput: document.getElementById('firebaseUrlInput'),
+        saveFirebaseBtn: document.getElementById('saveFirebaseBtn'),
+        firebaseStatusHint: document.getElementById('firebaseStatusHint'),
         connectedCountBadge: document.getElementById('connectedCountBadge'),
         tabHostBtn: document.getElementById('tabHostBtn'),
         tabJoinBtn: document.getElementById('tabJoinBtn'),
@@ -759,15 +792,11 @@
       function loadOrCreateHostRoomCode() {
         try {
           const saved = sessionStorage.getItem(SESSION_ROOM_KEY);
-          if (saved && /^[0-9]{4,6}$/.test(saved)) return saved;
+          if (saved && /^[0-9A-Za-z]{4,8}$/.test(saved)) return saved;
         } catch (e) {}
         const code = generateRoomCode();
         try { sessionStorage.setItem(SESSION_ROOM_KEY, code); } catch (e) {}
         return code;
-      }
-
-      function getTopicName(code) {
-        return TOPIC_PREFIX + String(code || '').replace(/[^0-9A-Za-z]/g, '').toLowerCase();
       }
 
       function detectDeviceName() {
@@ -775,7 +804,20 @@
         if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
         if (/iPhone/i.test(ua)) return 'iPhone';
         if (/Android/i.test(ua)) return 'Android';
-        return 'Browser Display';
+        return 'Desktop Browser';
+      }
+
+      function normalizeFirebaseUrl(raw) {
+        const s = String(raw || '').trim().replace(/\/+$/, '');
+        if (!s) return '';
+        if (!/^https:\/\/[a-z0-9.-]+\.(firebaseio\.com|firebasedatabase\.app)$/i.test(s)) {
+          return '';
+        }
+        return s;
+      }
+
+      function serverNow() {
+        return Date.now() + state.serverOffsetMs;
       }
 
       function shortNowTime() {
@@ -843,8 +885,8 @@
       }
 
       function getCurrentRemainingMs() {
-        if (state.status === 'running' && state.targetEndLocalMs !== null) {
-          const rem = state.targetEndLocalMs - Date.now();
+        if (state.status === 'running' && state.targetEndServerMs !== null) {
+          const rem = state.targetEndServerMs - serverNow();
           if (!state.overtime && rem <= 0) {
             return 0;
           }
@@ -942,7 +984,7 @@
         } catch (e) {}
       }
 
-      // -------------------- CLOCK-DRIFT-FREE HTTPS SYNC ENGINE --------------------
+      // -------------------- FIREBASE REALTIME DATABASE ENGINE --------------------
       function setSyncStatus(mode, label) {
         els.syncStatusText.textContent = label;
         const dot = els.syncStatusDot;
@@ -964,339 +1006,270 @@
         }
       }
 
-      function stopNetworkSync() {
-        if (eventSource) {
-          try { eventSource.close(); } catch (e) {}
-          eventSource = null;
+      function detachRoomListeners() {
+        if (roomStateRef) { roomStateRef.off(); roomStateRef = null; }
+        if (roomFlashRef) { roomFlashRef.off(); roomFlashRef = null; }
+        if (roomPeersRef) { roomPeersRef.off(); roomPeersRef = null; }
+        if (myPeerRef) {
+          try { myPeerRef.remove(); } catch (e) {}
+          myPeerRef = null;
         }
-        if (pollIntervalId) {
-          clearInterval(pollIntervalId);
-          pollIntervalId = null;
-        }
-        seenMessageIds.clear();
-        connectedPeers.clear();
-        updatePeerListUI();
       }
 
-      async function postRawRoomMessage(payload) {
-        if (state.syncRole === 'standalone') return false;
-        const topic = getTopicName(state.roomCode);
-        const bodyStr = JSON.stringify(Object.assign({ senderId: DEVICE_ID }, payload));
-        for (let attempt = 0; attempt < 2; attempt++) {
-          try {
-            const res = await fetch(NTFY_BASE + '/' + encodeURIComponent(topic), {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-              body: bodyStr
-            });
-            if (res.ok) {
-              if (state.syncRole === 'host' && payload.type === 'STATE') {
-                els.hostSyncActivity.textContent = 'Live • Sent #' + payload.seq + ' at ' + shortNowTime();
-              }
-              return true;
-            }
-          } catch (e) {
-            if (attempt === 0) {
-              await new Promise((r) => setTimeout(r, 450));
-            }
-          }
+      function initFirebaseConnection(url) {
+        const cleanUrl = normalizeFirebaseUrl(url);
+        if (!cleanUrl) {
+          setSyncStatus('connecting', 'Setup Firebase');
+          els.firebaseStatusHint.textContent = 'Enter a valid Firebase Realtime DB URL (https://...firebasedatabase.app or .firebaseio.com).';
+          return false;
         }
-        if (state.syncRole === 'host') {
-          els.hostSyncActivity.textContent = 'Local preview mode (open on GitHub Pages for live sync)';
+        if (typeof firebase === 'undefined' || !firebase.database) {
+          setSyncStatus('error', 'SDK Offline');
+          els.firebaseStatusHint.textContent = 'Firebase SDK unavailable offline. Open on GitHub Pages with internet.';
+          return false;
         }
-        return false;
-      }
 
-      // Serialized state publisher so rapid Start/Pause/Reset never arrive out of order
-      async function drainStatePublishQueue() {
-        if (publishInFlight) return;
-        publishInFlight = true;
+        detachRoomListeners();
+        if (offsetRef) { offsetRef.off(); offsetRef = null; }
+        if (connectedRef) { connectedRef.off(); connectedRef = null; }
+
+        state.firebaseUrl = cleanUrl;
+        els.firebaseUrlInput.value = cleanUrl;
+        try { localStorage.setItem(FB_URL_STORAGE_KEY, cleanUrl); } catch (e) {}
+
         try {
-          while (pendingStatePayload !== null) {
-            const nextPayload = pendingStatePayload;
-            pendingStatePayload = null;
-            // Re-snapshot exact remainingMs right before sending so network queuing adds 0ms drift
-            if (nextPayload.type === 'STATE' && state.status === 'running') {
-              nextPayload.remainingMs = getCurrentRemainingMs();
-            }
-            await postRawRoomMessage(nextPayload);
+          const appName = 'synctimer_' + btoa(cleanUrl).replace(/[^a-zA-Z0-9]/g, '').slice(0, 18);
+          const existing = firebase.apps.find((a) => a.name === appName);
+          fbApp = existing || firebase.initializeApp({ databaseURL: cleanUrl }, appName);
+          fbDb = fbApp.database();
+        } catch (e) {
+          setSyncStatus('error', 'Invalid URL');
+          els.firebaseStatusHint.textContent = 'Could not connect to that Firebase URL. Double-check the URL.';
+          showToast('Invalid Firebase Database URL.', 'error');
+          return false;
+        }
+
+        // Subscribe to Firebase built-in NTP server clock offset!
+        offsetRef = fbDb.ref('.info/serverTimeOffset');
+        offsetRef.on('value', (snap) => {
+          const offset = snap.val();
+          if (typeof offset === 'number') {
+            state.serverOffsetMs = offset;
+            const sign = offset >= 0 ? '+' : '';
+            els.offsetBadge.textContent = 'Clock Offset: ' + sign + offset + ' ms';
           }
-        } finally {
-          publishInFlight = false;
+        });
+
+        // Subscribe to live WebSocket connection status
+        connectedRef = fbDb.ref('.info/connected');
+        connectedRef.on('value', (snap) => {
+          state.firebaseConnected = !!snap.val();
+          if (state.firebaseConnected) {
+            const label = state.syncRole === 'client' ? ('Synced • ' + state.roomCode) : ('Live • ' + state.roomCode);
+            setSyncStatus('live', label);
+            els.firebaseStatusHint.textContent = 'Connected to Firebase Realtime Database (WebSocket active).';
+            registerPresence();
+          } else {
+            setSyncStatus('connecting', 'Reconnecting...');
+          }
+        });
+
+        attachRoom(state.roomCode, state.syncRole, false);
+        return true;
+      }
+
+      function registerPresence() {
+        if (!fbDb || !state.roomCode) return;
+        if (myPeerRef) {
+          try { myPeerRef.remove(); } catch (e) {}
+        }
+        myPeerRef = fbDb.ref('rooms/' + state.roomCode + '/peers/' + DEVICE_ID);
+        try {
+          myPeerRef.onDisconnect().remove();
+          myPeerRef.set({
+            name: detectDeviceName(),
+            role: state.syncRole,
+            joinedAt: firebase.database.ServerValue.TIMESTAMP
+          });
+        } catch (e) {}
+      }
+
+      function attachRoom(code, role, switchToViewer) {
+        detachRoomListeners();
+        state.roomCode = code;
+        state.syncRole = role;
+        state.lastFlashTs = Date.now();
+
+        els.hostRoomCode.textContent = code;
+        els.splitRoomCodeBadge.textContent = 'Room ' + code;
+
+        if (!fbDb) {
+          renderQRCode();
+          return;
+        }
+
+        roomStateRef = fbDb.ref('rooms/' + code + '/state');
+        roomFlashRef = fbDb.ref('rooms/' + code + '/flash');
+        roomPeersRef = fbDb.ref('rooms/' + code + '/peers');
+
+        if (role === 'host') {
+          els.viewerRoomTag.textContent = 'Host • Room ' + code;
+          els.hostSyncActivity.textContent = 'Live on Firebase • Room ' + code;
+          renderQRCode();
+        } else {
+          els.viewerRoomTag.textContent = 'Synced • Room ' + code;
+          els.manualSyncBtn.classList.remove('hidden');
+          els.disconnectRoomBtn.classList.remove('hidden');
+          els.viewerSyncNowBtn.classList.remove('hidden');
+          els.joinStatusNote.textContent = 'Connected to Firebase Room ' + code + ' (instant WebSocket sync).';
+        }
+
+        if (state.firebaseConnected) {
+          setSyncStatus('live', (role === 'client' ? 'Synced • ' : 'Live • ') + code);
+          registerPresence();
+        }
+
+        // Listen to authoritative room state in Firebase
+        let initialSnapshotHandled = false;
+        roomStateRef.on('value', (snap) => {
+          const val = snap.val();
+          if (!val) {
+            if (role === 'host' && !initialSnapshotHandled) {
+              initialSnapshotHandled = true;
+              writeStateToFirebase();
+            }
+            return;
+          }
+          initialSnapshotHandled = true;
+          // Apply incoming state (including two-way edits from another device!)
+          applyRemoteState(val);
+          if (role === 'client') {
+            els.viewerSyncStatusText.textContent = 'Firebase Live • ' + shortNowTime();
+            els.joinStatusNote.textContent = 'Synced to Room ' + code + ' (updated ' + shortNowTime() + ').';
+          } else {
+            els.hostSyncActivity.textContent = 'Cloud Synced • ' + shortNowTime();
+          }
+        }, (err) => {
+          setSyncStatus('error', 'DB Rules Blocked');
+          els.firebaseStatusHint.textContent = 'Permission denied by Firebase Rules. Enable Test Mode or public /rooms rules (see Setup Guide).';
+          showToast('Firebase permission denied. Check your Realtime Database Rules.', 'error');
+        });
+
+        // Listen to flash alerts
+        roomFlashRef.on('value', (snap) => {
+          const val = snap.val();
+          if (!val || typeof val.ts !== 'number') return;
+          if (val.ts > state.lastFlashTs && val.sender !== DEVICE_ID) {
+            state.lastFlashTs = val.ts;
+            triggerVisualFlash();
+          }
+        });
+
+        // Listen to live connected devices roster
+        roomPeersRef.on('value', (snap) => {
+          const peersObj = snap.val() || {};
+          renderPeerList(peersObj);
+        });
+
+        if (role === 'client' && switchToViewer) {
+          setViewMode('viewer');
         }
       }
 
-      function buildStatePayload() {
+      function buildStateObject() {
         return {
-          type: 'STATE',
-          hostSessionId: HOST_SESSION_ID,
-          seq: ++state.seq,
           status: state.status,
           durationMs: state.durationMs,
           remainingMs: getCurrentRemainingMs(),
+          targetEndServerMs: state.status === 'running' ? state.targetEndServerMs : null,
           label: state.label,
           message: state.message,
           warnSec: state.warnSec,
           critSec: state.critSec,
           overtime: state.overtime,
-          allowViewerControl: state.allowViewerControl
+          allowViewerControl: state.allowViewerControl,
+          updatedBy: DEVICE_ID,
+          updatedAt: (typeof firebase !== 'undefined' && firebase.database)
+            ? firebase.database.ServerValue.TIMESTAMP
+            : Date.now()
         };
       }
 
-      function broadcastState() {
-        if (state.syncRole === 'standalone') {
-          state.syncRole = 'host';
-          openRoomStream(state.roomCode, 'host', false);
-        }
-        const payload = buildStatePayload();
-        if (state.syncRole === 'host') {
-          pendingStatePayload = payload;
-          drainStatePublishQueue();
-        }
-        if (localChannel) {
-          try {
-            localChannel.postMessage({ roomCode: state.roomCode, payload: payload });
-          } catch (e) {}
-        }
-      }
-
-      function broadcastFlash() {
-        triggerVisualFlash();
-        const payload = { type: 'FLASH', hostSessionId: HOST_SESSION_ID, seq: ++state.seq };
-        if (state.syncRole === 'host') {
-          postRawRoomMessage(payload);
+      function writeStateToFirebase() {
+        const payload = buildStateObject();
+        if (roomStateRef) {
+          roomStateRef.set(payload).then(() => {
+            if (state.syncRole === 'host') {
+              els.hostSyncActivity.textContent = 'Cloud Synced • ' + shortNowTime();
+            }
+          }).catch(() => {
+            showToast('Failed to write to Firebase. Check database rules.', 'error');
+          });
         }
         if (localChannel) {
           try { localChannel.postMessage({ roomCode: state.roomCode, payload: payload }); } catch (e) {}
         }
       }
 
-      function updateServerClockOffsetFromLiveEvent(serverTimeSec) {
-        if (typeof serverTimeSec === 'number' && serverTimeSec > 1000000000) {
-          // ntfy.sh envelope.time is integer Unix seconds; add 500ms midpoint for sub-second accuracy
-          state.serverClockOffsetMs = (serverTimeSec * 1000 + 500) - Date.now();
-        }
-      }
+      function applyRemoteState(val) {
+        if (!val || typeof val !== 'object') return;
+        state.status = val.status || 'idle';
+        state.durationMs = typeof val.durationMs === 'number' ? val.durationMs : 300000;
+        state.remainingMs = typeof val.remainingMs === 'number' ? val.remainingMs : state.durationMs;
+        state.targetEndServerMs = (val.status === 'running' && typeof val.targetEndServerMs === 'number')
+          ? val.targetEndServerMs
+          : null;
+        state.label = val.label || 'Presentation Timer';
+        state.message = val.message || '';
+        state.warnSec = typeof val.warnSec === 'number' ? val.warnSec : 60;
+        state.critSec = typeof val.critSec === 'number' ? val.critSec : 15;
+        state.overtime = !!val.overtime;
+        state.allowViewerControl = !!val.allowViewerControl;
 
-      function handleIncomingRoomEnvelope(envelope, sourceKind) {
-        // sourceKind: 'sse' (real-time live push) | 'poll' (1.5s safety poll) | 'catchup' (initial join)
-        if (!envelope || envelope.event !== 'message' || !envelope.message) return;
-        if (envelope.id) {
-          if (seenMessageIds.has(envelope.id)) return;
-          seenMessageIds.add(envelope.id);
-          if (seenMessageIds.size > 500) {
-            const firstKey = seenMessageIds.values().next().value;
-            seenMessageIds.delete(firstKey);
-          }
-        }
+        const remSec = getCurrentRemainingMs() / 1000;
+        if (remSec > state.warnSec) state.warnChimeFired = false;
+        if (remSec > 0) state.endChimeFired = false;
 
-        let msg = null;
-        try {
-          msg = JSON.parse(envelope.message);
-        } catch (e) {
-          return;
-        }
-        if (!msg || typeof msg !== 'object') return;
-        if (msg.senderId === DEVICE_ID) return;
-
-        if (state.syncRole === 'host') {
-          if (msg.type === 'HELLO' || msg.type === 'SYNC_REQ') {
-            if (msg.type === 'HELLO') {
-              connectedPeers.set(msg.senderId, {
-                name: msg.deviceName || 'Device',
-                lastSeen: Date.now()
-              });
-              updatePeerListUI();
-            }
-            if (sourceKind !== 'catchup') {
-              if (msg.type === 'HELLO') {
-                showToast((msg.deviceName || 'Device') + ' joined Room ' + state.roomCode + '!', 'info');
-              }
-              broadcastState();
-            }
-          } else if (msg.type === 'CMD' && state.allowViewerControl && sourceKind !== 'catchup') {
-            if (msg.command === 'TOGGLE') toggleStartPause();
-            else if (msg.command === 'RESET') resetTimer();
-            else if (msg.command === 'ADJUST' && msg.data) adjustSeconds(msg.data.deltaSec || 0);
-            else if (msg.command === 'SET_DURATION' && msg.data) setDurationSeconds(msg.data.totalSeconds || 300);
-          }
-        } else if (state.syncRole === 'client') {
-          if (msg.type === 'STATE') {
-            const sess = String(msg.hostSessionId || '');
-            const seq = typeof msg.seq === 'number' ? msg.seq : 0;
-            // Accept if newer seq in same session, OR a new host session started
-            const isSameSession = sess === state.lastAppliedSessionId;
-            if (isSameSession && seq <= state.lastAppliedSeq) {
-              return;
-            }
-            state.lastAppliedSessionId = sess;
-            state.lastAppliedSeq = seq;
-
-            // Compute elapsed time since publish WITHOUT relying on Host's clock!
-            let elapsedSincePublishMs = 0;
-            if (sourceKind === 'sse') {
-              // Live SSE push just arrived (~100-250ms network latency)
-              elapsedSincePublishMs = 0;
-              updateServerClockOffsetFromLiveEvent(envelope.time);
-            } else if (typeof envelope.time === 'number' && state.serverClockOffsetMs !== null) {
-              const approxServerNowMs = Date.now() + state.serverClockOffsetMs;
-              const rawElapsed = approxServerNowMs - (envelope.time * 1000 + 500);
-              if (rawElapsed > 1200 && rawElapsed < 12 * 3600 * 1000) {
-                elapsedSincePublishMs = rawElapsed;
-              }
-            }
-
-            applyIncomingState(msg, elapsedSincePublishMs);
-            els.viewerSyncStatusText.textContent = 'Synced #' + seq + ' • ' + shortNowTime();
-            els.joinStatusNote.textContent = 'Synced to Room ' + state.roomCode + ' (update #' + seq + ' at ' + shortNowTime() + ').';
-          } else if (msg.type === 'FLASH' && sourceKind !== 'catchup') {
-            triggerVisualFlash();
-          }
-        }
-      }
-
-      async function pollLatestFromRoom(sinceWindow, sourceKind) {
-        if (state.syncRole === 'standalone') return false;
-        const topic = getTopicName(state.roomCode);
-        const since = sinceWindow || '45s';
-        const url = NTFY_BASE + '/' + encodeURIComponent(topic) + '/json?poll=1&since=' + encodeURIComponent(since);
-        try {
-          const res = await fetch(url, { cache: 'no-store' });
-          if (!res.ok) return false;
-          const text = await res.text();
-          const lines = text.split('\n').filter((l) => l.trim().length > 0);
-          lines.forEach((line) => {
-            try {
-              const env = JSON.parse(line);
-              handleIncomingRoomEnvelope(env, sourceKind || 'poll');
-            } catch (e) {}
-          });
-          return true;
-        } catch (e) {
-          return false;
-        }
-      }
-
-      function openRoomStream(code, role, switchToViewerOnConnect) {
-        stopNetworkSync();
-        state.roomCode = code;
-        state.syncRole = role;
-        state.lastAppliedSessionId = '';
-        state.lastAppliedSeq = -1;
-
-        const topic = getTopicName(code);
-        const sseUrl = NTFY_BASE + '/' + encodeURIComponent(topic) + '/sse?since=10m';
-
-        setSyncStatus('connecting', role === 'host' ? 'Connecting...' : 'Joining ' + code + '...');
-
-        if (role === 'host') {
-          els.viewerRoomTag.textContent = 'Host • Room ' + code;
-          renderQRCode();
-          updatePeerListUI();
-        } else {
-          els.viewerRoomTag.textContent = 'Synced • Room ' + code;
-          els.manualSyncBtn.classList.remove('hidden');
-          els.disconnectRoomBtn.classList.remove('hidden');
-          els.viewerSyncNowBtn.classList.remove('hidden');
-        }
-
-        // Always-on safety poll using a sliding 45s window (never misses Reset/Start due to ID cursor quirks)
-        const pollMs = role === 'client' ? 1500 : 3000;
-        pollIntervalId = setInterval(() => {
-          if (state.syncRole !== 'standalone') {
-            pollLatestFromRoom('45s', 'poll');
-          }
-        }, pollMs);
-
-        // Open real-time SSE stream
-        try {
-          eventSource = new EventSource(sseUrl);
-        } catch (e) {
-          setSyncStatus('live', (role === 'host' ? 'Hosting ' : 'Synced • ') + code);
-          pollLatestFromRoom('10m', 'catchup');
-          return;
-        }
-
-        let openedOnce = false;
-
-        // Capture exact ntfy.sh server clock from named 'open' and 'keepalive' events
-        eventSource.addEventListener('open', (ev) => {
-          try {
-            if (ev && ev.data) {
-              const d = JSON.parse(ev.data);
-              updateServerClockOffsetFromLiveEvent(d.time);
-            }
-          } catch (e) {}
-        });
-
-        eventSource.addEventListener('keepalive', (ev) => {
-          try {
-            if (ev && ev.data) {
-              const d = JSON.parse(ev.data);
-              updateServerClockOffsetFromLiveEvent(d.time);
-            }
-          } catch (e) {}
-        });
-
-        eventSource.onopen = () => {
-          const firstOpen = !openedOnce;
-          openedOnce = true;
-          if (role === 'host') {
-            setSyncStatus('live', 'Hosting ' + code);
-            els.hostSyncActivity.textContent = 'Live • Room ' + code + ' ready for Device 2';
-            if (firstOpen) {
-              broadcastState();
-            }
-          } else {
-            setSyncStatus('live', 'Synced • ' + code);
-            els.joinStatusNote.textContent = 'Connected to Room ' + code + '. Requesting live timer from Host...';
-            if (firstOpen) {
-              postRawRoomMessage({
-                type: 'HELLO',
-                deviceName: detectDeviceName()
-              });
-              showToast('Connected to Room ' + code + '!', 'info');
-              if (switchToViewerOnConnect) setViewMode('viewer');
-            }
-          }
-        };
-
-        eventSource.onmessage = (event) => {
-          try {
-            const env = JSON.parse(event.data);
-            handleIncomingRoomEnvelope(env, 'sse');
-          } catch (e) {}
-        };
-
-        eventSource.onerror = () => {
-          if (!openedOnce) {
-            setSyncStatus('connecting', 'Polling ' + code);
-          }
-        };
-      }
-
-      function joinRoomByCode(rawCode, switchToViewer) {
-        const code = String(rawCode || '').replace(/[^0-9A-Za-z]/g, '').trim();
-        if (code.length < 4) {
-          showToast('Please enter the 4-digit Room Code from Device 1.', 'warn');
-          return;
-        }
-        els.joinCodeInput.value = code;
-        openRoomStream(code, 'client', switchToViewer);
-      }
-
-      function disconnectFromRoom() {
-        stopNetworkSync();
-        state.syncRole = 'host';
-        state.roomCode = loadOrCreateHostRoomCode();
-        els.disconnectRoomBtn.classList.add('hidden');
-        els.manualSyncBtn.classList.add('hidden');
-        els.viewerSyncNowBtn.classList.add('hidden');
-        els.joinStatusNote.textContent = 'Disconnected. Enter a Room Code to join again.';
-        els.tabHostBtn.click();
-        openRoomStream(state.roomCode, 'host', false);
+        syncInputsFromState();
         renderStaticControls();
-        showToast('Returned to Host mode (Room ' + state.roomCode + ').', 'info');
+      }
+
+      function broadcastFlash() {
+        triggerVisualFlash();
+        if (roomFlashRef && typeof firebase !== 'undefined' && firebase.database) {
+          state.lastFlashTs = serverNow();
+          roomFlashRef.set({
+            ts: firebase.database.ServerValue.TIMESTAMP,
+            sender: DEVICE_ID
+          }).catch(() => {});
+        }
+        if (localChannel) {
+          try { localChannel.postMessage({ roomCode: state.roomCode, payload: { type: 'FLASH' } }); } catch (e) {}
+        }
+      }
+
+      function renderPeerList(peersObj) {
+        const entries = Object.keys(peersObj).map((k) => ({ id: k, data: peersObj[k] }));
+        const otherCount = entries.filter((e) => e.id !== DEVICE_ID).length;
+        els.connectedCountBadge.textContent = otherCount === 1 ? '1 device linked' : otherCount + ' devices linked';
+        els.peerList.innerHTML = '';
+        if (entries.length === 0) {
+          const li = document.createElement('li');
+          li.className = 'italic text-slate-500';
+          li.textContent = 'No devices connected yet.';
+          els.peerList.appendChild(li);
+          return;
+        }
+        entries.forEach((entry) => {
+          const isMe = entry.id === DEVICE_ID;
+          const li = document.createElement('li');
+          li.className = 'flex items-center justify-between py-1 px-2 rounded-lg bg-slate-900/90 text-slate-200';
+          const roleTag = entry.data.role === 'host' ? 'Host' : 'Display';
+          li.innerHTML = '<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>' +
+            escapeHtml(entry.data.name || 'Device') + (isMe ? ' (This device)' : '') +
+            '</span><span class="text-[11px] text-emerald-400 font-semibold">' + roleTag + '</span>';
+          els.peerList.appendChild(li);
+        });
       }
 
       function buildShareUrl() {
@@ -1305,6 +1278,9 @@
             const url = new URL(window.location.href);
             url.searchParams.set('room', state.roomCode);
             url.searchParams.set('role', 'viewer');
+            if (state.firebaseUrl && state.firebaseUrl !== normalizeFirebaseUrl(DEFAULT_FIREBASE_DATABASE_URL)) {
+              url.searchParams.set('db', state.firebaseUrl);
+            }
             return url.toString();
           }
         } catch (e) {}
@@ -1334,136 +1310,70 @@
         }
       }
 
-      function updatePeerListUI() {
-        const count = connectedPeers.size;
-        els.connectedCountBadge.textContent = count === 1 ? '1 device linked' : count + ' devices linked';
-        els.peerList.innerHTML = '';
-        if (count === 0) {
-          const li = document.createElement('li');
-          li.className = 'italic text-slate-500';
-          li.textContent = 'Room ' + state.roomCode + ' is live. Enter ' + state.roomCode + ' on Device 2.';
-          els.peerList.appendChild(li);
-          return;
+      function canMutateTimer() {
+        if (state.syncRole === 'client' && !state.allowViewerControl) {
+          showToast('Controller has locked remote controls.', 'warn');
+          return false;
         }
-        connectedPeers.forEach((entry) => {
-          const li = document.createElement('li');
-          li.className = 'flex items-center justify-between py-1 px-2 rounded-lg bg-slate-900/90 text-slate-200';
-          li.innerHTML = '<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>' + escapeHtml(entry.name) + '</span><span class="text-[11px] text-emerald-400 font-semibold">Synced</span>';
-          els.peerList.appendChild(li);
-        });
-      }
-
-      function applyIncomingState(payload, elapsedSincePublishMs) {
-        if (!payload || payload.type !== 'STATE') return;
-        const elapsed = typeof elapsedSincePublishMs === 'number' && elapsedSincePublishMs > 0 ? elapsedSincePublishMs : 0;
-
-        state.status = payload.status;
-        state.durationMs = payload.durationMs;
-        state.label = payload.label || 'Presentation Timer';
-        state.message = payload.message || '';
-        state.warnSec = typeof payload.warnSec === 'number' ? payload.warnSec : 60;
-        state.critSec = typeof payload.critSec === 'number' ? payload.critSec : 15;
-        state.overtime = !!payload.overtime;
-        state.allowViewerControl = !!payload.allowViewerControl;
-
-        if (payload.status === 'running') {
-          const adjustedRemaining = payload.remainingMs - elapsed;
-          state.remainingMs = adjustedRemaining;
-          // Anchor targetEndLocalMs strictly to THIS device's own clock!
-          state.targetEndLocalMs = Date.now() + adjustedRemaining;
-        } else {
-          state.remainingMs = payload.remainingMs;
-          state.targetEndLocalMs = null;
-        }
-
-        const remSec = getCurrentRemainingMs() / 1000;
-        if (remSec > state.warnSec) state.warnChimeFired = false;
-        if (remSec > 0) state.endChimeFired = false;
-
-        syncInputsFromState();
-        renderStaticControls();
-      }
-
-      function sendClientCommand(command, data) {
-        if (state.syncRole === 'client') {
-          if (!state.allowViewerControl) {
-            showToast('Controller has locked remote controls.', 'warn');
-            return false;
-          }
-          postRawRoomMessage({ type: 'CMD', command: command, data: data || {} });
-          return true;
-        }
-        return false;
+        return true;
       }
 
       // -------------------- TIMER ACTIONS --------------------
       function toggleStartPause() {
         unlockAudio();
-        if (state.syncRole === 'client') {
-          sendClientCommand('TOGGLE');
-          return;
-        }
+        if (!canMutateTimer()) return;
         if (state.status === 'running') {
           state.remainingMs = getCurrentRemainingMs();
-          state.targetEndLocalMs = null;
+          state.targetEndServerMs = null;
           state.status = 'paused';
         } else {
           if (state.remainingMs <= 0 && !state.overtime) {
             state.remainingMs = state.durationMs;
           }
-          state.targetEndLocalMs = Date.now() + state.remainingMs;
+          state.targetEndServerMs = serverNow() + state.remainingMs;
           state.status = 'running';
           if (state.remainingMs / 1000 > state.warnSec) state.warnChimeFired = false;
           if (state.remainingMs > 0) state.endChimeFired = false;
         }
         renderStaticControls();
-        broadcastState();
+        writeStateToFirebase();
       }
 
       function resetTimer() {
         unlockAudio();
-        if (state.syncRole === 'client') {
-          sendClientCommand('RESET');
-          return;
-        }
+        if (!canMutateTimer()) return;
         state.status = 'idle';
         state.remainingMs = state.durationMs;
-        state.targetEndLocalMs = null;
+        state.targetEndServerMs = null;
         state.warnChimeFired = false;
         state.endChimeFired = false;
         renderStaticControls();
-        broadcastState();
+        writeStateToFirebase();
       }
 
       function setDurationSeconds(totalSeconds) {
-        if (state.syncRole === 'client') {
-          sendClientCommand('SET_DURATION', { totalSeconds: totalSeconds });
-          return;
-        }
+        if (!canMutateTimer()) return;
         const safeSec = Math.max(1, Math.min(86399, Math.floor(totalSeconds)));
         state.durationMs = safeSec * 1000;
         state.remainingMs = state.durationMs;
         state.status = 'idle';
-        state.targetEndLocalMs = null;
+        state.targetEndServerMs = null;
         state.warnChimeFired = false;
         state.endChimeFired = false;
         syncInputsFromState();
         savePrefs();
         renderStaticControls();
-        broadcastState();
+        writeStateToFirebase();
       }
 
       function adjustSeconds(deltaSec) {
-        if (state.syncRole === 'client') {
-          sendClientCommand('ADJUST', { deltaSec: deltaSec });
-          return;
-        }
+        if (!canMutateTimer()) return;
         const deltaMs = deltaSec * 1000;
-        if (state.status === 'running' && state.targetEndLocalMs !== null) {
-          state.targetEndLocalMs += deltaMs;
+        if (state.status === 'running' && state.targetEndServerMs !== null) {
+          state.targetEndServerMs += deltaMs;
           const rem = getCurrentRemainingMs();
           if (!state.overtime && rem < 0) {
-            state.targetEndLocalMs = Date.now();
+            state.targetEndServerMs = serverNow();
           }
           if (rem > state.durationMs) state.durationMs = rem;
         } else {
@@ -1476,22 +1386,49 @@
         if (getCurrentRemainingMs() / 1000 > state.warnSec) state.warnChimeFired = false;
         if (getCurrentRemainingMs() > 0) state.endChimeFired = false;
         renderStaticControls();
-        broadcastState();
+        writeStateToFirebase();
+      }
+
+      function joinRoomByCode(rawCode, switchToViewer) {
+        const code = String(rawCode || '').replace(/[^0-9A-Za-z]/g, '').trim();
+        if (code.length < 4) {
+          showToast('Please enter the 4-digit Room Code from Device 1.', 'warn');
+          return;
+        }
+        if (!fbDb) {
+          showToast('Paste your Firebase Realtime Database URL first (or scan Device 1 QR code).', 'warn');
+          return;
+        }
+        els.joinCodeInput.value = code;
+        attachRoom(code, 'client', switchToViewer);
+        showToast('Joined Firebase Room ' + code + '!', 'info');
+      }
+
+      function disconnectFromRoom() {
+        const hostCode = loadOrCreateHostRoomCode();
+        els.disconnectRoomBtn.classList.add('hidden');
+        els.manualSyncBtn.classList.add('hidden');
+        els.viewerSyncNowBtn.classList.add('hidden');
+        els.joinStatusNote.textContent = 'Disconnected. Enter a Room Code to join again.';
+        els.tabHostBtn.click();
+        attachRoom(hostCode, 'host', false);
+        renderStaticControls();
+        showToast('Returned to Host mode (Room ' + hostCode + ').', 'info');
       }
 
       // -------------------- SAME-BROWSER MULTI-TAB SYNC --------------------
       function initBroadcastChannel() {
         if (typeof BroadcastChannel === 'undefined') return;
         try {
-          localChannel = new BroadcastChannel('synctimer_local_sync_v4');
+          localChannel = new BroadcastChannel('synctimer_fb_local_v1');
           localChannel.onmessage = (event) => {
             const data = event.data;
             if (!data || !data.payload) return;
-            if (state.syncRole === 'host') return;
-            if (data.payload.type === 'STATE') {
-              applyIncomingState(data.payload, 0);
-            } else if (data.payload.type === 'FLASH') {
+            if (fbDb) return; // Firebase handles sync when connected
+            if (data.payload.type === 'FLASH') {
               triggerVisualFlash();
+            } else {
+              applyRemoteState(data.payload);
             }
           };
         } catch (e) {
@@ -1620,10 +1557,10 @@
 
         if (state.status === 'running' && !state.overtime && remMs <= 0) {
           state.remainingMs = 0;
-          state.targetEndLocalMs = null;
+          state.targetEndServerMs = null;
           state.status = 'paused';
           renderStaticControls();
-          if (state.syncRole === 'host') broadcastState();
+          if (state.syncRole === 'host') writeStateToFirebase();
         }
 
         if (state.status === 'running') {
@@ -1743,20 +1680,20 @@
           state.warnSec = Math.max(0, parseInt(els.warnSecInput.value, 10) || 0);
           savePrefs();
           renderStaticControls();
-          broadcastState();
+          writeStateToFirebase();
         });
 
         els.critSecInput.addEventListener('change', () => {
           state.critSec = Math.max(0, parseInt(els.critSecInput.value, 10) || 0);
           savePrefs();
           renderStaticControls();
-          broadcastState();
+          writeStateToFirebase();
         });
 
         els.overtimeToggle.addEventListener('change', () => {
           state.overtime = els.overtimeToggle.checked;
           savePrefs();
-          broadcastState();
+          writeStateToFirebase();
         });
 
         els.timerLabelInput.addEventListener('input', () => {
@@ -1764,13 +1701,13 @@
           savePrefs();
           renderStaticControls();
           if (labelDebounceTimer) clearTimeout(labelDebounceTimer);
-          labelDebounceTimer = setTimeout(() => broadcastState(), 350);
+          labelDebounceTimer = setTimeout(() => writeStateToFirebase(), 300);
         });
 
         els.sendMessageBtn.addEventListener('click', () => {
           state.message = els.liveMessageInput.value.trim();
           renderStaticControls();
-          broadcastState();
+          writeStateToFirebase();
           if (state.message) showToast('Broadcasted cue to synced devices.', 'info');
         });
 
@@ -1778,7 +1715,7 @@
           state.message = '';
           els.liveMessageInput.value = '';
           renderStaticControls();
-          broadcastState();
+          writeStateToFirebase();
         });
 
         document.querySelectorAll('.cue-btn').forEach((btn) => {
@@ -1787,13 +1724,25 @@
             state.message = cue;
             els.liveMessageInput.value = cue;
             renderStaticControls();
-            broadcastState();
+            writeStateToFirebase();
             showToast('Cue sent: "' + cue + '"', 'info');
           });
         });
 
         els.flashAlertBtn.addEventListener('click', broadcastFlash);
         els.splitFlashBtn.addEventListener('click', broadcastFlash);
+
+        // Firebase URL Connect
+        els.saveFirebaseBtn.addEventListener('click', () => {
+          const ok = initFirebaseConnection(els.firebaseUrlInput.value);
+          if (ok) showToast('Connected to Firebase Realtime Database!', 'info');
+        });
+        els.firebaseUrlInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const ok = initFirebaseConnection(els.firebaseUrlInput.value);
+            if (ok) showToast('Connected to Firebase Realtime Database!', 'info');
+          }
+        });
 
         els.tabHostBtn.addEventListener('click', () => {
           els.hostPanel.classList.remove('hidden');
@@ -1810,20 +1759,29 @@
         });
 
         els.startHostBtn.addEventListener('click', () => {
-          if (state.syncRole !== 'host') {
-            openRoomStream(state.roomCode, 'host', false);
-          } else {
-            broadcastState();
-            showToast('Pushed live timer state to Room ' + state.roomCode + '.', 'info');
+          if (!fbDb) {
+            if (els.firebaseUrlInput.value.trim()) {
+              initFirebaseConnection(els.firebaseUrlInput.value);
+            } else {
+              els.helpModal.classList.remove('hidden');
+              showToast('Paste your Firebase Realtime DB URL first.', 'warn');
+            }
+            return;
           }
+          if (state.syncRole !== 'host') {
+            attachRoom(state.roomCode, 'host', false);
+          }
+          writeStateToFirebase();
+          showToast('Pushed live state to Firebase Room ' + state.roomCode + '.', 'info');
         });
+
         els.copyCodeBtn.addEventListener('click', () => copyText(state.roomCode, 'Room Code'));
         els.copyLinkBtn.addEventListener('click', () => copyText(buildShareUrl(), 'Invite Link'));
 
         els.twoWayToggle.addEventListener('change', () => {
           state.allowViewerControl = els.twoWayToggle.checked;
           renderStaticControls();
-          broadcastState();
+          writeStateToFirebase();
         });
 
         els.connectRoomBtn.addEventListener('click', () => joinRoomByCode(els.joinCodeInput.value, true));
@@ -1832,22 +1790,22 @@
         });
         els.disconnectRoomBtn.addEventListener('click', disconnectFromRoom);
 
-        const handleManualSync = async () => {
-          if (state.syncRole === 'client') {
-            await postRawRoomMessage({ type: 'SYNC_REQ' });
-            const ok = await pollLatestFromRoom('60s', 'poll');
-            showToast(ok ? 'Requested fresh sync from Host.' : 'Could not reach sync server.', ok ? 'info' : 'warn');
+        const handleManualSync = () => {
+          if (!roomStateRef) {
+            showToast('Not connected to a Firebase room yet.', 'warn');
+            return;
           }
+          roomStateRef.once('value').then((snap) => {
+            if (snap.val()) {
+              applyRemoteState(snap.val());
+              showToast('Synced with Firebase server time.', 'info');
+            }
+          }).catch(() => {
+            showToast('Could not read Firebase room.', 'error');
+          });
         };
         els.manualSyncBtn.addEventListener('click', handleManualSync);
         els.viewerSyncNowBtn.addEventListener('click', handleManualSync);
-
-        document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible' && state.syncRole === 'client') {
-            postRawRoomMessage({ type: 'SYNC_REQ' });
-            pollLatestFromRoom('60s', 'poll');
-          }
-        });
 
         els.soundToggleBtn.addEventListener('click', () => {
           state.soundEnabled = !state.soundEnabled;
@@ -1860,7 +1818,9 @@
         els.wakeLockBtn.addEventListener('click', toggleWakeLock);
         els.fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-        els.helpBtn.addEventListener('click', () => els.helpModal.classList.remove('hidden'));
+        const openHelp = () => els.helpModal.classList.remove('hidden');
+        els.helpBtn.addEventListener('click', openHelp);
+        els.openSetupLinkBtn.addEventListener('click', openHelp);
         els.closeHelpBtn.addEventListener('click', () => els.helpModal.classList.add('hidden'));
         els.closeHelpFooterBtn.addEventListener('click', () => els.helpModal.classList.add('hidden'));
         els.helpModal.addEventListener('click', (e) => {
@@ -1893,21 +1853,36 @@
           lucide.createIcons();
         }
 
-        let joinedFromUrl = false;
+        // Resolve Firebase DB URL: URL param ?db=... > hardcoded DEFAULT_FIREBASE_DATABASE_URL > saved localStorage
+        let urlRoom = null;
+        let urlRole = null;
+        let urlDb = '';
         try {
           const params = new URLSearchParams(window.location.search);
-          const urlRoom = params.get('room');
-          const urlRole = params.get('role');
-          if (urlRoom) {
-            joinedFromUrl = true;
-            els.tabJoinBtn.click();
-            els.joinCodeInput.value = urlRoom;
-            joinRoomByCode(urlRoom, urlRole === 'viewer');
-          }
+          urlRoom = params.get('room');
+          urlRole = params.get('role');
+          urlDb = params.get('db') || '';
         } catch (e) {}
 
-        if (!joinedFromUrl) {
-          openRoomStream(state.roomCode, 'host', false);
+        let savedDb = '';
+        try { savedDb = localStorage.getItem(FB_URL_STORAGE_KEY) || ''; } catch (e) {}
+
+        const chosenDbUrl = normalizeFirebaseUrl(urlDb) || normalizeFirebaseUrl(DEFAULT_FIREBASE_DATABASE_URL) || normalizeFirebaseUrl(savedDb);
+
+        if (urlRoom) {
+          els.tabJoinBtn.click();
+          els.joinCodeInput.value = urlRoom;
+          state.roomCode = urlRoom;
+          state.syncRole = 'client';
+        }
+
+        if (chosenDbUrl) {
+          initFirebaseConnection(chosenDbUrl);
+          if (urlRoom && urlRole === 'viewer') {
+            setViewMode('viewer');
+          }
+        } else {
+          renderQRCode();
         }
 
         if (rafId) cancelAnimationFrame(rafId);
