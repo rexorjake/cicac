@@ -122,7 +122,7 @@
               <span id="syncStatusText">Starting...</span>
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">iPad, iPhone &amp; Android Synced Timer (Auto-Live HTTPS)</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block">iPad, iPhone &amp; Android Synced Timer (Clock-Drift-Free)</p>
         </div>
       </div>
 
@@ -355,7 +355,7 @@
             <div class="rounded-xl bg-slate-950/60 border border-slate-800/80 p-3">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Connected Devices</span>
-                <span class="text-[10px] text-emerald-400/80 font-mono">HTTPS SSE + Poll</span>
+                <span class="text-[10px] text-emerald-400/80 font-mono">Relative-Time Sync</span>
               </div>
               <ul id="peerList" class="space-y-1.5 text-xs text-slate-400">
                 <li class="italic text-slate-500">Room is live. Enter the 4-digit code on Device 2.</li>
@@ -374,7 +374,7 @@
                 </button>
               </div>
               <p id="joinStatusNote" class="mt-2.5 text-xs text-slate-400">
-                Uses HTTPS streaming plus automatic 1.5s sync check so iOS Safari and Android Chrome stay locked in sync.
+                Uses relative remaining-time sync so differing device clocks never offset your countdown.
               </p>
             </div>
             <div class="flex gap-2">
@@ -576,13 +576,13 @@
       </div>
       <ol class="space-y-3 text-sm text-slate-300 leading-relaxed list-decimal list-inside">
         <li>
-          <strong class="text-white">Open your GitHub Pages link on Device 1:</strong> Your 4-digit Room Code starts hosting automatically — no extra button required.
+          <strong class="text-white">Open your GitHub Pages link on Device 1:</strong> Your 4-digit Room Code starts hosting automatically.
         </li>
         <li>
           <strong class="text-white">Open the same link on Device 2:</strong> Switch to <strong class="text-white">Join Room</strong>, enter the 4-digit code (or scan the QR code), and tap <strong class="text-emerald-300">Join</strong>.
         </li>
         <li>
-          <strong class="text-white">Press Start on Device 1:</strong> Device 2 receives updates instantly via HTTPS streaming plus an automatic 1.5-second safety poll so Safari and Chrome never stall.
+          <strong class="text-white">Clock-drift-free sync:</strong> SyncTimer sends exact remaining duration (not raw device clock timestamps) and queues every Start, Pause, and Reset in strict order so both devices match even if their system clocks differ.
         </li>
       </ol>
       <div class="mt-4 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
@@ -602,23 +602,25 @@
 
       // -------------------- STATE MODEL --------------------
       const NTFY_BASE = 'https://ntfy.sh';
-      const TOPIC_PREFIX = 'synctimer_https_v3_room_';
-      const STORAGE_KEY = 'synctimer_prefs_v3';
-      const SESSION_ROOM_KEY = 'synctimer_host_room_v3';
+      const TOPIC_PREFIX = 'synctimer_https_v4_room_';
+      const STORAGE_KEY = 'synctimer_prefs_v4';
+      const SESSION_ROOM_KEY = 'synctimer_host_room_v4';
       const DEVICE_ID = 'dev_' + Math.random().toString(36).slice(2, 10);
+      const HOST_SESSION_ID = 'hs_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
 
       const state = {
         viewMode: 'controller', // 'controller' | 'viewer' | 'split'
         syncRole: 'host', // 'host' | 'client' | 'standalone'
         roomCode: loadOrCreateHostRoomCode(),
         seq: 0,
-        lastAppliedSentAt: 0,
+        lastAppliedSessionId: '',
+        lastAppliedSeq: -1,
 
-        // Timer core
+        // Timer core (targetEndLocalMs ALWAYS uses THIS device's own Date.now()!)
         status: 'idle', // 'idle' | 'running' | 'paused'
         durationMs: 5 * 60 * 1000,
         remainingMs: 5 * 60 * 1000,
-        targetEndEpochMs: null,
+        targetEndLocalMs: null,
         label: 'Presentation Timer',
         message: '',
         warnSec: 60,
@@ -629,17 +631,18 @@
         // Local device preferences
         soundEnabled: true,
         wakeLockActive: false,
-        clockOffsetMs: 0,
+        serverClockOffsetMs: null, // serverEpochMs - localEpochMs (from ntfy open/keepalive)
         warnChimeFired: false,
         endChimeFired: false
       };
 
-      // Networking handles (HTTPS SSE + Always-On Safety Poll)
+      // Networking handles (HTTPS SSE + Serialized Publish Queue + Safety Poll)
       let eventSource = null;
       let pollIntervalId = null;
-      let lastMessageId = '';
       const seenMessageIds = new Set();
-      let connectedPeers = new Map(); // deviceId -> { name, lastSeen }
+      let connectedPeers = new Map();
+      let publishInFlight = false;
+      let pendingStatePayload = null;
       let wakeLockSentinel = null;
       let audioCtx = null;
       let qrInstance = null;
@@ -670,7 +673,6 @@
         closeHelpBtn: document.getElementById('closeHelpBtn'),
         closeHelpFooterBtn: document.getElementById('closeHelpFooterBtn'),
 
-        // Controller timer
         controllerTimerCard: document.getElementById('controllerTimerCard'),
         stateBadge: document.getElementById('stateBadge'),
         controllerLabelPreview: document.getElementById('controllerLabelPreview'),
@@ -682,7 +684,6 @@
         startPauseText: document.getElementById('startPauseText'),
         resetBtn: document.getElementById('resetBtn'),
 
-        // Inputs
         inputHours: document.getElementById('inputHours'),
         inputMinutes: document.getElementById('inputMinutes'),
         inputSeconds: document.getElementById('inputSeconds'),
@@ -696,7 +697,6 @@
         clearMessageBtn: document.getElementById('clearMessageBtn'),
         flashAlertBtn: document.getElementById('flashAlertBtn'),
 
-        // Sync Room
         connectedCountBadge: document.getElementById('connectedCountBadge'),
         tabHostBtn: document.getElementById('tabHostBtn'),
         tabJoinBtn: document.getElementById('tabJoinBtn'),
@@ -719,7 +719,6 @@
         disconnectRoomBtn: document.getElementById('disconnectRoomBtn'),
         joinStatusNote: document.getElementById('joinStatusNote'),
 
-        // Viewer
         viewerStateDot: document.getElementById('viewerStateDot'),
         viewerLabel: document.getElementById('viewerLabel'),
         viewerRoomTag: document.getElementById('viewerRoomTag'),
@@ -737,7 +736,6 @@
         viewerSyncNowBtn: document.getElementById('viewerSyncNowBtn'),
         viewerSwitchControllerBtn: document.getElementById('viewerSwitchControllerBtn'),
 
-        // Split Preview
         exitSplitBtn: document.getElementById('exitSplitBtn'),
         splitRoomCodeBadge: document.getElementById('splitRoomCodeBadge'),
         splitControllerLabel: document.getElementById('splitControllerLabel'),
@@ -844,13 +842,9 @@
         return prefix + pad(mins) + ':' + pad(secs);
       }
 
-      function getAdjustedNow() {
-        return Date.now() + (state.syncRole === 'client' ? state.clockOffsetMs : 0);
-      }
-
       function getCurrentRemainingMs() {
-        if (state.status === 'running' && state.targetEndEpochMs !== null) {
-          const rem = state.targetEndEpochMs - getAdjustedNow();
+        if (state.status === 'running' && state.targetEndLocalMs !== null) {
+          const rem = state.targetEndLocalMs - Date.now();
           if (!state.overtime && rem <= 0) {
             return 0;
           }
@@ -867,7 +861,7 @@
           .replace(/"/g, '&quot;');
       }
 
-      // -------------------- AUDIO SYNTHESIS (WEB AUDIO API) --------------------
+      // -------------------- AUDIO SYNTHESIS --------------------
       function unlockAudio() {
         try {
           if (!audioCtx) {
@@ -948,7 +942,7 @@
         } catch (e) {}
       }
 
-      // -------------------- HTTPS LIVE SYNC ENGINE (NTFY.SH SSE + ALWAYS-ON POLL) --------------------
+      // -------------------- CLOCK-DRIFT-FREE HTTPS SYNC ENGINE --------------------
       function setSyncStatus(mode, label) {
         els.syncStatusText.textContent = label;
         const dot = els.syncStatusDot;
@@ -984,43 +978,62 @@
         updatePeerListUI();
       }
 
-      async function publishRoomMessage(payload) {
+      async function postRawRoomMessage(payload) {
         if (state.syncRole === 'standalone') return false;
         const topic = getTopicName(state.roomCode);
         const bodyStr = JSON.stringify(Object.assign({ senderId: DEVICE_ID }, payload));
-        try {
-          const res = await fetch(NTFY_BASE + '/' + encodeURIComponent(topic), {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-            body: bodyStr
-          });
-          if (res.ok) {
-            if (state.syncRole === 'host') {
-              els.hostSyncActivity.textContent = 'Live • Last pushed at ' + shortNowTime();
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const res = await fetch(NTFY_BASE + '/' + encodeURIComponent(topic), {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+              body: bodyStr
+            });
+            if (res.ok) {
+              if (state.syncRole === 'host' && payload.type === 'STATE') {
+                els.hostSyncActivity.textContent = 'Live • Sent #' + payload.seq + ' at ' + shortNowTime();
+              }
+              return true;
             }
-            return true;
+          } catch (e) {
+            if (attempt === 0) {
+              await new Promise((r) => setTimeout(r, 450));
+            }
           }
-          if (state.syncRole === 'host') {
-            els.hostSyncActivity.textContent = 'Sync server returned HTTP ' + res.status;
+        }
+        if (state.syncRole === 'host') {
+          els.hostSyncActivity.textContent = 'Local preview mode (open on GitHub Pages for live sync)';
+        }
+        return false;
+      }
+
+      // Serialized state publisher so rapid Start/Pause/Reset never arrive out of order
+      async function drainStatePublishQueue() {
+        if (publishInFlight) return;
+        publishInFlight = true;
+        try {
+          while (pendingStatePayload !== null) {
+            const nextPayload = pendingStatePayload;
+            pendingStatePayload = null;
+            // Re-snapshot exact remainingMs right before sending so network queuing adds 0ms drift
+            if (nextPayload.type === 'STATE' && state.status === 'running') {
+              nextPayload.remainingMs = getCurrentRemainingMs();
+            }
+            await postRawRoomMessage(nextPayload);
           }
-          return false;
-        } catch (e) {
-          if (state.syncRole === 'host') {
-            els.hostSyncActivity.textContent = 'Local preview mode (open on GitHub Pages for live sync)';
-          }
-          return false;
+        } finally {
+          publishInFlight = false;
         }
       }
 
       function buildStatePayload() {
         return {
           type: 'STATE',
+          hostSessionId: HOST_SESSION_ID,
           seq: ++state.seq,
-          sentAtEpochMs: Date.now(),
           status: state.status,
           durationMs: state.durationMs,
           remainingMs: getCurrentRemainingMs(),
-          targetEndEpochMs: state.targetEndEpochMs,
           label: state.label,
           message: state.message,
           warnSec: state.warnSec,
@@ -1037,7 +1050,8 @@
         }
         const payload = buildStatePayload();
         if (state.syncRole === 'host') {
-          publishRoomMessage(payload);
+          pendingStatePayload = payload;
+          drainStatePublishQueue();
         }
         if (localChannel) {
           try {
@@ -1048,22 +1062,29 @@
 
       function broadcastFlash() {
         triggerVisualFlash();
-        const payload = { type: 'FLASH', sentAtEpochMs: Date.now() };
+        const payload = { type: 'FLASH', hostSessionId: HOST_SESSION_ID, seq: ++state.seq };
         if (state.syncRole === 'host') {
-          publishRoomMessage(payload);
+          postRawRoomMessage(payload);
         }
         if (localChannel) {
           try { localChannel.postMessage({ roomCode: state.roomCode, payload: payload }); } catch (e) {}
         }
       }
 
-      function handleIncomingRoomEnvelope(envelope, isCatchup) {
+      function updateServerClockOffsetFromLiveEvent(serverTimeSec) {
+        if (typeof serverTimeSec === 'number' && serverTimeSec > 1000000000) {
+          // ntfy.sh envelope.time is integer Unix seconds; add 500ms midpoint for sub-second accuracy
+          state.serverClockOffsetMs = (serverTimeSec * 1000 + 500) - Date.now();
+        }
+      }
+
+      function handleIncomingRoomEnvelope(envelope, sourceKind) {
+        // sourceKind: 'sse' (real-time live push) | 'poll' (1.5s safety poll) | 'catchup' (initial join)
         if (!envelope || envelope.event !== 'message' || !envelope.message) return;
         if (envelope.id) {
           if (seenMessageIds.has(envelope.id)) return;
           seenMessageIds.add(envelope.id);
-          lastMessageId = envelope.id;
-          if (seenMessageIds.size > 400) {
+          if (seenMessageIds.size > 500) {
             const firstKey = seenMessageIds.values().next().value;
             seenMessageIds.delete(firstKey);
           }
@@ -1078,27 +1099,22 @@
         if (!msg || typeof msg !== 'object') return;
         if (msg.senderId === DEVICE_ID) return;
 
-        // Auto-correct large clock drift (> 3s) between devices using server time
-        if (!isCatchup && typeof envelope.time === 'number' && state.syncRole === 'client') {
-          const serverMs = envelope.time * 1000;
-          const drift = serverMs - Date.now();
-          if (Math.abs(drift) > 3000) {
-            state.clockOffsetMs = drift;
-          }
-        }
-
         if (state.syncRole === 'host') {
-          if (msg.type === 'HELLO') {
-            connectedPeers.set(msg.senderId, {
-              name: msg.deviceName || 'Device',
-              lastSeen: Date.now()
-            });
-            updatePeerListUI();
-            if (!isCatchup) {
-              showToast((msg.deviceName || 'Device') + ' joined Room ' + state.roomCode + '!', 'info');
+          if (msg.type === 'HELLO' || msg.type === 'SYNC_REQ') {
+            if (msg.type === 'HELLO') {
+              connectedPeers.set(msg.senderId, {
+                name: msg.deviceName || 'Device',
+                lastSeen: Date.now()
+              });
+              updatePeerListUI();
+            }
+            if (sourceKind !== 'catchup') {
+              if (msg.type === 'HELLO') {
+                showToast((msg.deviceName || 'Device') + ' joined Room ' + state.roomCode + '!', 'info');
+              }
               broadcastState();
             }
-          } else if (msg.type === 'CMD' && state.allowViewerControl && !isCatchup) {
+          } else if (msg.type === 'CMD' && state.allowViewerControl && sourceKind !== 'catchup') {
             if (msg.command === 'TOGGLE') toggleStartPause();
             else if (msg.command === 'RESET') resetTimer();
             else if (msg.command === 'ADJUST' && msg.data) adjustSeconds(msg.data.deltaSec || 0);
@@ -1106,23 +1122,43 @@
           }
         } else if (state.syncRole === 'client') {
           if (msg.type === 'STATE') {
-            const msgTs = typeof msg.sentAtEpochMs === 'number' ? msg.sentAtEpochMs : 0;
-            if (msgTs >= state.lastAppliedSentAt) {
-              state.lastAppliedSentAt = msgTs;
-              applyIncomingState(msg);
-              els.viewerSyncStatusText.textContent = 'Synced • Updated ' + shortNowTime();
-              els.joinStatusNote.textContent = 'Synced to Room ' + state.roomCode + ' (last update ' + shortNowTime() + ').';
+            const sess = String(msg.hostSessionId || '');
+            const seq = typeof msg.seq === 'number' ? msg.seq : 0;
+            // Accept if newer seq in same session, OR a new host session started
+            const isSameSession = sess === state.lastAppliedSessionId;
+            if (isSameSession && seq <= state.lastAppliedSeq) {
+              return;
             }
-          } else if (msg.type === 'FLASH' && !isCatchup) {
+            state.lastAppliedSessionId = sess;
+            state.lastAppliedSeq = seq;
+
+            // Compute elapsed time since publish WITHOUT relying on Host's clock!
+            let elapsedSincePublishMs = 0;
+            if (sourceKind === 'sse') {
+              // Live SSE push just arrived (~100-250ms network latency)
+              elapsedSincePublishMs = 0;
+              updateServerClockOffsetFromLiveEvent(envelope.time);
+            } else if (typeof envelope.time === 'number' && state.serverClockOffsetMs !== null) {
+              const approxServerNowMs = Date.now() + state.serverClockOffsetMs;
+              const rawElapsed = approxServerNowMs - (envelope.time * 1000 + 500);
+              if (rawElapsed > 1200 && rawElapsed < 12 * 3600 * 1000) {
+                elapsedSincePublishMs = rawElapsed;
+              }
+            }
+
+            applyIncomingState(msg, elapsedSincePublishMs);
+            els.viewerSyncStatusText.textContent = 'Synced #' + seq + ' • ' + shortNowTime();
+            els.joinStatusNote.textContent = 'Synced to Room ' + state.roomCode + ' (update #' + seq + ' at ' + shortNowTime() + ').';
+          } else if (msg.type === 'FLASH' && sourceKind !== 'catchup') {
             triggerVisualFlash();
           }
         }
       }
 
-      async function pollLatestFromRoom(sinceParam, isCatchup) {
+      async function pollLatestFromRoom(sinceWindow, sourceKind) {
         if (state.syncRole === 'standalone') return false;
         const topic = getTopicName(state.roomCode);
-        const since = sinceParam || (lastMessageId ? lastMessageId : '10m');
+        const since = sinceWindow || '45s';
         const url = NTFY_BASE + '/' + encodeURIComponent(topic) + '/json?poll=1&since=' + encodeURIComponent(since);
         try {
           const res = await fetch(url, { cache: 'no-store' });
@@ -1132,7 +1168,7 @@
           lines.forEach((line) => {
             try {
               const env = JSON.parse(line);
-              handleIncomingRoomEnvelope(env, !!isCatchup);
+              handleIncomingRoomEnvelope(env, sourceKind || 'poll');
             } catch (e) {}
           });
           return true;
@@ -1145,8 +1181,8 @@
         stopNetworkSync();
         state.roomCode = code;
         state.syncRole = role;
-        state.lastAppliedSentAt = 0;
-        lastMessageId = '';
+        state.lastAppliedSessionId = '';
+        state.lastAppliedSeq = -1;
 
         const topic = getTopicName(code);
         const sseUrl = NTFY_BASE + '/' + encodeURIComponent(topic) + '/sse?since=10m';
@@ -1164,45 +1200,60 @@
           els.viewerSyncNowBtn.classList.remove('hidden');
         }
 
-        // Immediate catch-up fetch so Device 2 gets current state right away
-        pollLatestFromRoom('10m', true);
-
-        // Always-on lightweight safety poll (1.5s for client, 3s for host) so Safari/Chrome proxies never stall SSE
+        // Always-on safety poll using a sliding 45s window (never misses Reset/Start due to ID cursor quirks)
         const pollMs = role === 'client' ? 1500 : 3000;
         pollIntervalId = setInterval(() => {
           if (state.syncRole !== 'standalone') {
-            pollLatestFromRoom(lastMessageId || '2m', false);
+            pollLatestFromRoom('45s', 'poll');
           }
         }, pollMs);
 
-        // Open real-time SSE stream for instant (<200ms) push
+        // Open real-time SSE stream
         try {
           eventSource = new EventSource(sseUrl);
         } catch (e) {
           setSyncStatus('live', (role === 'host' ? 'Hosting ' : 'Synced • ') + code);
+          pollLatestFromRoom('10m', 'catchup');
           return;
         }
 
         let openedOnce = false;
+
+        // Capture exact ntfy.sh server clock from named 'open' and 'keepalive' events
+        eventSource.addEventListener('open', (ev) => {
+          try {
+            if (ev && ev.data) {
+              const d = JSON.parse(ev.data);
+              updateServerClockOffsetFromLiveEvent(d.time);
+            }
+          } catch (e) {}
+        });
+
+        eventSource.addEventListener('keepalive', (ev) => {
+          try {
+            if (ev && ev.data) {
+              const d = JSON.parse(ev.data);
+              updateServerClockOffsetFromLiveEvent(d.time);
+            }
+          } catch (e) {}
+        });
 
         eventSource.onopen = () => {
           const firstOpen = !openedOnce;
           openedOnce = true;
           if (role === 'host') {
             setSyncStatus('live', 'Hosting ' + code);
-            els.startHostBtnText.textContent = 'Push Sync Now';
             els.hostSyncActivity.textContent = 'Live • Room ' + code + ' ready for Device 2';
             if (firstOpen) {
               broadcastState();
             }
           } else {
             setSyncStatus('live', 'Synced • ' + code);
-            els.joinStatusNote.textContent = 'Connected to Room ' + code + '. Listening for Host updates...';
+            els.joinStatusNote.textContent = 'Connected to Room ' + code + '. Requesting live timer from Host...';
             if (firstOpen) {
-              publishRoomMessage({
+              postRawRoomMessage({
                 type: 'HELLO',
-                deviceName: detectDeviceName(),
-                sentAtEpochMs: Date.now()
+                deviceName: detectDeviceName()
               });
               showToast('Connected to Room ' + code + '!', 'info');
               if (switchToViewerOnConnect) setViewMode('viewer');
@@ -1213,7 +1264,7 @@
         eventSource.onmessage = (event) => {
           try {
             const env = JSON.parse(event.data);
-            handleIncomingRoomEnvelope(env, false);
+            handleIncomingRoomEnvelope(env, 'sse');
           } catch (e) {}
         };
 
@@ -1238,7 +1289,6 @@
         stopNetworkSync();
         state.syncRole = 'host';
         state.roomCode = loadOrCreateHostRoomCode();
-        state.clockOffsetMs = 0;
         els.disconnectRoomBtn.classList.add('hidden');
         els.manualSyncBtn.classList.add('hidden');
         els.viewerSyncNowBtn.classList.add('hidden');
@@ -1303,18 +1353,28 @@
         });
       }
 
-      function applyIncomingState(payload) {
+      function applyIncomingState(payload, elapsedSincePublishMs) {
         if (!payload || payload.type !== 'STATE') return;
+        const elapsed = typeof elapsedSincePublishMs === 'number' && elapsedSincePublishMs > 0 ? elapsedSincePublishMs : 0;
+
         state.status = payload.status;
         state.durationMs = payload.durationMs;
-        state.remainingMs = payload.remainingMs;
-        state.targetEndEpochMs = payload.targetEndEpochMs;
         state.label = payload.label || 'Presentation Timer';
         state.message = payload.message || '';
         state.warnSec = typeof payload.warnSec === 'number' ? payload.warnSec : 60;
         state.critSec = typeof payload.critSec === 'number' ? payload.critSec : 15;
         state.overtime = !!payload.overtime;
         state.allowViewerControl = !!payload.allowViewerControl;
+
+        if (payload.status === 'running') {
+          const adjustedRemaining = payload.remainingMs - elapsed;
+          state.remainingMs = adjustedRemaining;
+          // Anchor targetEndLocalMs strictly to THIS device's own clock!
+          state.targetEndLocalMs = Date.now() + adjustedRemaining;
+        } else {
+          state.remainingMs = payload.remainingMs;
+          state.targetEndLocalMs = null;
+        }
 
         const remSec = getCurrentRemainingMs() / 1000;
         if (remSec > state.warnSec) state.warnChimeFired = false;
@@ -1330,7 +1390,7 @@
             showToast('Controller has locked remote controls.', 'warn');
             return false;
           }
-          publishRoomMessage({ type: 'CMD', command: command, data: data || {}, sentAtEpochMs: Date.now() });
+          postRawRoomMessage({ type: 'CMD', command: command, data: data || {} });
           return true;
         }
         return false;
@@ -1345,13 +1405,13 @@
         }
         if (state.status === 'running') {
           state.remainingMs = getCurrentRemainingMs();
-          state.targetEndEpochMs = null;
+          state.targetEndLocalMs = null;
           state.status = 'paused';
         } else {
           if (state.remainingMs <= 0 && !state.overtime) {
             state.remainingMs = state.durationMs;
           }
-          state.targetEndEpochMs = Date.now() + state.remainingMs;
+          state.targetEndLocalMs = Date.now() + state.remainingMs;
           state.status = 'running';
           if (state.remainingMs / 1000 > state.warnSec) state.warnChimeFired = false;
           if (state.remainingMs > 0) state.endChimeFired = false;
@@ -1368,7 +1428,7 @@
         }
         state.status = 'idle';
         state.remainingMs = state.durationMs;
-        state.targetEndEpochMs = null;
+        state.targetEndLocalMs = null;
         state.warnChimeFired = false;
         state.endChimeFired = false;
         renderStaticControls();
@@ -1384,7 +1444,7 @@
         state.durationMs = safeSec * 1000;
         state.remainingMs = state.durationMs;
         state.status = 'idle';
-        state.targetEndEpochMs = null;
+        state.targetEndLocalMs = null;
         state.warnChimeFired = false;
         state.endChimeFired = false;
         syncInputsFromState();
@@ -1399,11 +1459,11 @@
           return;
         }
         const deltaMs = deltaSec * 1000;
-        if (state.status === 'running' && state.targetEndEpochMs !== null) {
-          state.targetEndEpochMs += deltaMs;
+        if (state.status === 'running' && state.targetEndLocalMs !== null) {
+          state.targetEndLocalMs += deltaMs;
           const rem = getCurrentRemainingMs();
           if (!state.overtime && rem < 0) {
-            state.targetEndEpochMs = Date.now();
+            state.targetEndLocalMs = Date.now();
           }
           if (rem > state.durationMs) state.durationMs = rem;
         } else {
@@ -1423,13 +1483,13 @@
       function initBroadcastChannel() {
         if (typeof BroadcastChannel === 'undefined') return;
         try {
-          localChannel = new BroadcastChannel('synctimer_local_sync_v3');
+          localChannel = new BroadcastChannel('synctimer_local_sync_v4');
           localChannel.onmessage = (event) => {
             const data = event.data;
             if (!data || !data.payload) return;
             if (state.syncRole === 'host') return;
             if (data.payload.type === 'STATE') {
-              applyIncomingState(data.payload);
+              applyIncomingState(data.payload, 0);
             } else if (data.payload.type === 'FLASH') {
               triggerVisualFlash();
             }
@@ -1560,7 +1620,7 @@
 
         if (state.status === 'running' && !state.overtime && remMs <= 0) {
           state.remainingMs = 0;
-          state.targetEndEpochMs = null;
+          state.targetEndLocalMs = null;
           state.status = 'paused';
           renderStaticControls();
           if (state.syncRole === 'host') broadcastState();
@@ -1735,7 +1795,6 @@
         els.flashAlertBtn.addEventListener('click', broadcastFlash);
         els.splitFlashBtn.addEventListener('click', broadcastFlash);
 
-        // Host / Join Tabs
         els.tabHostBtn.addEventListener('click', () => {
           els.hostPanel.classList.remove('hidden');
           els.joinPanel.classList.add('hidden');
@@ -1755,7 +1814,7 @@
             openRoomStream(state.roomCode, 'host', false);
           } else {
             broadcastState();
-            showToast('Pushed current timer state to Room ' + state.roomCode + '.', 'info');
+            showToast('Pushed live timer state to Room ' + state.roomCode + '.', 'info');
           }
         });
         els.copyCodeBtn.addEventListener('click', () => copyText(state.roomCode, 'Room Code'));
@@ -1774,20 +1833,22 @@
         els.disconnectRoomBtn.addEventListener('click', disconnectFromRoom);
 
         const handleManualSync = async () => {
-          const ok = await pollLatestFromRoom('10m', false);
-          showToast(ok ? 'Synced with latest timer state.' : 'Could not reach sync server.', ok ? 'info' : 'warn');
+          if (state.syncRole === 'client') {
+            await postRawRoomMessage({ type: 'SYNC_REQ' });
+            const ok = await pollLatestFromRoom('60s', 'poll');
+            showToast(ok ? 'Requested fresh sync from Host.' : 'Could not reach sync server.', ok ? 'info' : 'warn');
+          }
         };
         els.manualSyncBtn.addEventListener('click', handleManualSync);
         els.viewerSyncNowBtn.addEventListener('click', handleManualSync);
 
-        // Auto re-sync when device wakes up from sleep
         document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible' && state.syncRole !== 'standalone') {
-            pollLatestFromRoom('10m', false);
+          if (document.visibilityState === 'visible' && state.syncRole === 'client') {
+            postRawRoomMessage({ type: 'SYNC_REQ' });
+            pollLatestFromRoom('60s', 'poll');
           }
         });
 
-        // Toolbar utilities
         els.soundToggleBtn.addEventListener('click', () => {
           state.soundEnabled = !state.soundEnabled;
           if (state.soundEnabled) playChime('warn');
@@ -1832,7 +1893,6 @@
           lucide.createIcons();
         }
 
-        // Check URL params (?room=4829&role=viewer) for QR / Invite Link auto-join; otherwise auto-host immediately
         let joinedFromUrl = false;
         try {
           const params = new URLSearchParams(window.location.search);
