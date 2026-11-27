@@ -6,7 +6,6 @@
   <title>SyncTimer — Multi-Tablet Synced Countdown</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap');
@@ -123,7 +122,7 @@
               <span id="syncStatusText">Offline</span>
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">Multi-iPad &amp; Android Tablet Synced Timer</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Multi-iPad &amp; Android Tablet Synced Timer (HTTPS Live Sync)</p>
         </div>
       </div>
 
@@ -336,7 +335,7 @@
               <div id="qrCodeBox" class="qr-wrapper bg-white p-2 rounded-xl shrink-0"></div>
               <div class="text-xs text-slate-300 space-y-1">
                 <div class="font-bold text-white">Scan on Tablet 2</div>
-                <p class="text-slate-400 leading-relaxed">Open this page on your 2nd iPad or Android tablet and enter code <span id="qrCodeInlineText" class="font-mono font-bold text-emerald-400">----</span> (or scan if hosted online).</p>
+                <p class="text-slate-400 leading-relaxed">Open your GitHub Pages link on Tablet 2 and enter code <span id="qrCodeInlineText" class="font-mono font-bold text-emerald-400">----</span> or scan this QR code.</p>
               </div>
             </div>
 
@@ -351,9 +350,12 @@
 
             <!-- Connected Devices List -->
             <div class="rounded-xl bg-slate-950/60 border border-slate-800/80 p-3">
-              <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Connected Devices</div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Connected Devices</span>
+                <span class="text-[10px] text-emerald-400/80 font-mono">HTTPS Port 443</span>
+              </div>
               <ul id="peerList" class="space-y-1.5 text-xs text-slate-400">
-                <li class="italic text-slate-500">Tap "Go Live &amp; Host" to accept tablet connections.</li>
+                <li class="italic text-slate-500">Tap "Go Live &amp; Host" to start syncing over HTTPS.</li>
               </ul>
             </div>
           </div>
@@ -369,12 +371,17 @@
                 </button>
               </div>
               <p id="joinStatusNote" class="mt-2.5 text-xs text-slate-400">
-                Automatically switches to Display mode once synced, or stays controllable if allowed by Host.
+                Uses standard HTTPS streaming so it works across iPads, Android tablets, and office Wi-Fi without blocking.
               </p>
             </div>
-            <button id="disconnectRoomBtn" type="button" class="hidden w-full py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs transition-colors">
-              Disconnect from Room
-            </button>
+            <div class="flex gap-2">
+              <button id="manualSyncBtn" type="button" class="hidden flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs transition-colors">
+                Sync Now
+              </button>
+              <button id="disconnectRoomBtn" type="button" class="hidden flex-1 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 font-bold text-xs transition-colors">
+                Disconnect from Room
+              </button>
+            </div>
           </div>
         </div>
 
@@ -466,9 +473,14 @@
             <i data-lucide="lock" class="w-3.5 h-3.5"></i>
             <span>Display locked to Controller</span>
           </div>
-          <button id="viewerSwitchControllerBtn" type="button" class="ml-auto px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition-colors">
-            Open Controller
-          </button>
+          <div class="ml-auto flex items-center gap-2">
+            <button id="viewerSyncNowBtn" type="button" class="hidden px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-emerald-300 transition-colors">
+              Sync Now
+            </button>
+            <button id="viewerSwitchControllerBtn" type="button" class="px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-white transition-colors">
+              Open Controller
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -561,17 +573,17 @@
       </div>
       <ol class="space-y-3 text-sm text-slate-300 leading-relaxed list-decimal list-inside">
         <li>
-          <strong class="text-white">Open this HTML file on both tablets:</strong> Download <code class="text-emerald-300 font-mono text-xs">sync_timer.html</code> and host it for free (for example, drag-and-drop onto Netlify Drop, Tiiny.host, or GitHub Pages) so both tablets open the same <code class="text-emerald-300 font-mono text-xs">https://</code> link in Safari or Chrome.
+          <strong class="text-white">Open your GitHub Pages link on both tablets:</strong> Upload this updated <code class="text-emerald-300 font-mono text-xs">sync_timer.html</code> (or <code class="text-emerald-300 font-mono text-xs">index.html</code>) to GitHub Pages and open it in Safari on iPad or Chrome on Android.
         </li>
         <li>
-          <strong class="text-white">Host on Tablet 1 (Controller):</strong> Tap <strong class="text-emerald-300">Go Live &amp; Host</strong> to activate your 4-digit Room Code and QR code.
+          <strong class="text-white">Host on Tablet 1 (Controller):</strong> Tap <strong class="text-emerald-300">Go Live &amp; Host</strong>. It connects over standard HTTPS (port 443) so office Wi-Fi firewalls and Safari never block it.
         </li>
         <li>
-          <strong class="text-white">Join on Tablet 2 (Display):</strong> Open the page on your second iPad or Android tablet, switch to <strong class="text-white">Join Room</strong>, enter the 4-digit code (or scan the QR code), and tap <strong class="text-emerald-300">Join</strong>. Both tablets sync via peer-to-peer WebRTC with automatic clock-offset correction.
+          <strong class="text-white">Join on Tablet 2 (Display):</strong> Switch to <strong class="text-white">Join Room</strong>, enter the 4-digit code (or scan the QR code), and tap <strong class="text-emerald-300">Join</strong>. Tablet 2 catches up immediately even if the timer is already running.
         </li>
       </ol>
       <div class="mt-4 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
-        Tip: Tap the <strong class="text-slate-200">Sun</strong> icon in the top bar on your Display tablet to keep the screen awake, and tap the <strong class="text-slate-200">Speaker</strong> icon once to enable iOS/Android chime audio.
+        Tip: Tap the <strong class="text-slate-200">Sun</strong> icon on your Display tablet to keep the screen awake, and tap the <strong class="text-slate-200">Speaker</strong> icon once to enable chime audio.
       </div>
       <div class="mt-5 flex justify-end">
         <button id="closeHelpFooterBtn" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm">
@@ -586,14 +598,17 @@
       'use strict';
 
       // -------------------- STATE MODEL --------------------
-      const ROOM_PREFIX = 'synctimer-v1-room-';
-      const STORAGE_KEY = 'synctimer_prefs_v1';
+      const NTFY_BASE = 'https://ntfy.sh';
+      const TOPIC_PREFIX = 'synctimer_https_v2_room_';
+      const STORAGE_KEY = 'synctimer_prefs_v2';
+      const DEVICE_ID = 'dev_' + Math.random().toString(36).slice(2, 10);
 
       const state = {
         viewMode: 'controller', // 'controller' | 'viewer' | 'split'
         syncRole: 'standalone', // 'standalone' | 'host' | 'client'
         roomCode: generateRoomCode(),
         seq: 0,
+        lastAppliedSeq: -1,
 
         // Timer core
         status: 'idle', // 'idle' | 'running' | 'paused'
@@ -610,21 +625,22 @@
         // Local device preferences
         soundEnabled: true,
         wakeLockActive: false,
-        clockOffsetMs: 0, // hostEpoch - localEpoch
+        clockOffsetMs: 0,
         warnChimeFired: false,
         endChimeFired: false
       };
 
-      // Networking handles
-      let peer = null;
-      let hostConnections = new Map(); // peerId -> { conn, name, connectedAt }
-      let clientConn = null;
-      let reconnectTimer = null;
+      // Networking handles (HTTPS SSE + Fetch fallback)
+      let eventSource = null;
+      let pollIntervalId = null;
+      let lastMessageId = '';
+      let connectedPeers = new Map(); // deviceId -> { name, lastSeen }
       let wakeLockSentinel = null;
       let audioCtx = null;
       let qrInstance = null;
       let localChannel = null;
       let rafId = null;
+      let labelDebounceTimer = null;
 
       // -------------------- DOM REFS --------------------
       const els = {
@@ -693,6 +709,7 @@
         peerList: document.getElementById('peerList'),
         joinCodeInput: document.getElementById('joinCodeInput'),
         connectRoomBtn: document.getElementById('connectRoomBtn'),
+        manualSyncBtn: document.getElementById('manualSyncBtn'),
         disconnectRoomBtn: document.getElementById('disconnectRoomBtn'),
         joinStatusNote: document.getElementById('joinStatusNote'),
 
@@ -710,6 +727,7 @@
         viewerStartPauseText: document.getElementById('viewerStartPauseText'),
         viewerResetBtn: document.getElementById('viewerResetBtn'),
         viewerReadOnlyHint: document.getElementById('viewerReadOnlyHint'),
+        viewerSyncNowBtn: document.getElementById('viewerSyncNowBtn'),
         viewerSwitchControllerBtn: document.getElementById('viewerSwitchControllerBtn'),
 
         // Split Preview
@@ -731,6 +749,18 @@
       // -------------------- UTILITIES --------------------
       function generateRoomCode() {
         return String(Math.floor(1000 + Math.random() * 9000));
+      }
+
+      function getTopicName(code) {
+        return TOPIC_PREFIX + String(code || '').replace(/[^0-9A-Za-z]/g, '').toLowerCase();
+      }
+
+      function detectDeviceName() {
+        const ua = navigator.userAgent || '';
+        if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
+        if (/Android/i.test(ua)) return 'Android Tablet';
+        if (/iPhone/i.test(ua)) return 'iPhone';
+        return 'Browser Display';
       }
 
       function showToast(msg, type) {
@@ -808,6 +838,14 @@
         return state.remainingMs;
       }
 
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
       // -------------------- AUDIO SYNTHESIS (WEB AUDIO API) --------------------
       function unlockAudio() {
         try {
@@ -818,9 +856,7 @@
           if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
           }
-        } catch (e) {
-          // Audio unavailable
-        }
+        } catch (e) {}
       }
 
       function playChime(kind) {
@@ -843,9 +879,7 @@
             osc.start(now + idx * 0.16);
             osc.stop(now + idx * 0.16 + 0.38);
           });
-        } catch (e) {
-          // Ignore audio errors
-        }
+        } catch (e) {}
       }
 
       function triggerVisualFlash() {
@@ -871,9 +905,7 @@
             overtime: state.overtime,
             soundEnabled: state.soundEnabled
           }));
-        } catch (e) {
-          // Ignore storage restrictions
-        }
+        } catch (e) {}
       }
 
       function loadPrefs() {
@@ -892,12 +924,58 @@
           if (typeof parsed.critSec === 'number') state.critSec = parsed.critSec;
           if (typeof parsed.overtime === 'boolean') state.overtime = parsed.overtime;
           if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
-        } catch (e) {
-          // Ignore storage errors
+        } catch (e) {}
+      }
+
+      // -------------------- HTTPS LIVE SYNC ENGINE (NTFY.SH SSE + FETCH) --------------------
+      function setSyncStatus(mode, label) {
+        els.syncStatusText.textContent = label;
+        const dot = els.syncStatusDot;
+        const pill = els.syncStatusPill;
+        dot.className = 'w-2 h-2 rounded-full ';
+        pill.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ';
+        if (mode === 'live') {
+          dot.className += 'bg-emerald-400';
+          pill.className += 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
+        } else if (mode === 'connecting') {
+          dot.className += 'bg-amber-400 animate-pulse';
+          pill.className += 'bg-amber-500/15 text-amber-300 border-amber-500/40';
+        } else if (mode === 'error') {
+          dot.className += 'bg-rose-400';
+          pill.className += 'bg-rose-500/15 text-rose-300 border-rose-500/40';
+        } else {
+          dot.className += 'bg-slate-400';
+          pill.className += 'bg-slate-800 text-slate-300 border-slate-700';
         }
       }
 
-      // -------------------- STATE SNAPSHOT & BROADCAST --------------------
+      function stopNetworkSync() {
+        if (eventSource) {
+          try { eventSource.close(); } catch (e) {}
+          eventSource = null;
+        }
+        if (pollIntervalId) {
+          clearInterval(pollIntervalId);
+          pollIntervalId = null;
+        }
+        connectedPeers.clear();
+        updatePeerListUI();
+      }
+
+      async function publishRoomMessage(payload) {
+        if (state.syncRole === 'standalone') return;
+        const topic = getTopicName(state.roomCode);
+        const bodyStr = JSON.stringify(Object.assign({ senderId: DEVICE_ID }, payload));
+        try {
+          await fetch(NTFY_BASE + '/' + encodeURIComponent(topic), {
+            method: 'POST',
+            body: bodyStr
+          });
+        } catch (e) {
+          // Network unreachable in offline preview
+        }
+      }
+
       function buildStatePayload() {
         return {
           type: 'STATE',
@@ -918,13 +996,9 @@
 
       function broadcastState() {
         const payload = buildStatePayload();
-        // Send to all WebRTC connected tablets
-        hostConnections.forEach((entry) => {
-          if (entry.conn && entry.conn.open) {
-            try { entry.conn.send(payload); } catch (e) {}
-          }
-        });
-        // Send over same-browser BroadcastChannel for instant multi-tab sync
+        if (state.syncRole === 'host') {
+          publishRoomMessage(payload);
+        }
         if (localChannel) {
           try {
             localChannel.postMessage({ roomCode: state.roomCode, payload: payload });
@@ -935,14 +1009,245 @@
       function broadcastFlash() {
         triggerVisualFlash();
         const payload = { type: 'FLASH', sentAtEpochMs: Date.now() };
-        hostConnections.forEach((entry) => {
-          if (entry.conn && entry.conn.open) {
-            try { entry.conn.send(payload); } catch (e) {}
-          }
-        });
+        if (state.syncRole === 'host') {
+          publishRoomMessage(payload);
+        }
         if (localChannel) {
           try { localChannel.postMessage({ roomCode: state.roomCode, payload: payload }); } catch (e) {}
         }
+      }
+
+      function handleIncomingRoomEnvelope(envelope, isCatchup) {
+        if (!envelope || envelope.event !== 'message' || !envelope.message) return;
+        if (envelope.id) lastMessageId = envelope.id;
+
+        let msg = null;
+        try {
+          msg = JSON.parse(envelope.message);
+        } catch (e) {
+          return;
+        }
+        if (!msg || typeof msg !== 'object') return;
+        if (msg.senderId === DEVICE_ID) return; // Ignore own echo
+
+        // Estimate large clock drift (> 3s) using server timestamp if live
+        if (!isCatchup && typeof envelope.time === 'number' && state.syncRole === 'client') {
+          const serverMs = envelope.time * 1000;
+          const drift = serverMs - Date.now();
+          if (Math.abs(drift) > 3000) {
+            state.clockOffsetMs = drift;
+          }
+        }
+
+        if (state.syncRole === 'host') {
+          if (msg.type === 'HELLO') {
+            connectedPeers.set(msg.senderId, {
+              name: msg.deviceName || 'Tablet',
+              lastSeen: Date.now()
+            });
+            updatePeerListUI();
+            if (!isCatchup) {
+              showToast((msg.deviceName || 'Tablet') + ' joined Room ' + state.roomCode + '!', 'info');
+              broadcastState();
+            }
+          } else if (msg.type === 'CMD' && state.allowViewerControl && !isCatchup) {
+            if (msg.command === 'TOGGLE') toggleStartPause();
+            else if (msg.command === 'RESET') resetTimer();
+            else if (msg.command === 'ADJUST' && msg.data) adjustSeconds(msg.data.deltaSec || 0);
+            else if (msg.command === 'SET_DURATION' && msg.data) setDurationSeconds(msg.data.totalSeconds || 300);
+          }
+        } else if (state.syncRole === 'client') {
+          if (msg.type === 'STATE') {
+            applyIncomingState(msg);
+          } else if (msg.type === 'FLASH' && !isCatchup) {
+            triggerVisualFlash();
+          }
+        }
+      }
+
+      async function pollLatestFromRoom(sinceParam) {
+        if (state.syncRole === 'standalone') return false;
+        const topic = getTopicName(state.roomCode);
+        const since = sinceParam || (lastMessageId ? lastMessageId : '20m');
+        const url = NTFY_BASE + '/' + encodeURIComponent(topic) + '/json?poll=1&since=' + encodeURIComponent(since);
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return false;
+          const text = await res.text();
+          const lines = text.split('\n').filter((l) => l.trim().length > 0);
+          lines.forEach((line) => {
+            try {
+              const env = JSON.parse(line);
+              handleIncomingRoomEnvelope(env, true);
+            } catch (e) {}
+          });
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function openRoomStream(code, role, switchToViewerOnConnect) {
+        stopNetworkSync();
+        state.roomCode = code;
+        state.syncRole = role;
+        lastMessageId = '';
+
+        const topic = getTopicName(code);
+        const sseUrl = NTFY_BASE + '/' + encodeURIComponent(topic) + '/sse?since=10m';
+
+        setSyncStatus('connecting', role === 'host' ? 'Starting Room...' : 'Connecting...');
+
+        // Start EventSource (HTTPS Port 443)
+        try {
+          eventSource = new EventSource(sseUrl);
+        } catch (e) {
+          setSyncStatus('connecting', 'Polling Mode');
+          startPollingFallback();
+          return;
+        }
+
+        let openedOnce = false;
+
+        eventSource.onopen = () => {
+          const firstOpen = !openedOnce;
+          openedOnce = true;
+          if (role === 'host') {
+            setSyncStatus('live', 'Hosting ' + code);
+            els.startHostBtnText.textContent = 'Room Live (' + code + ')';
+            els.viewerRoomTag.textContent = 'Host • Room ' + code;
+            renderQRCode();
+            updatePeerListUI();
+            if (firstOpen) {
+              broadcastState();
+              showToast('Room ' + code + ' is live! Enter ' + code + ' on Tablet 2.', 'info');
+            }
+          } else {
+            setSyncStatus('live', 'Synced • ' + code);
+            els.viewerRoomTag.textContent = 'Synced • Room ' + code;
+            els.joinStatusNote.textContent = 'Connected to Room ' + code + ' over HTTPS. Receiving live updates.';
+            els.manualSyncBtn.classList.remove('hidden');
+            els.disconnectRoomBtn.classList.remove('hidden');
+            els.viewerSyncNowBtn.classList.remove('hidden');
+            if (firstOpen) {
+              publishRoomMessage({
+                type: 'HELLO',
+                deviceName: detectDeviceName(),
+                sentAtEpochMs: Date.now()
+              });
+              showToast('Synced to Room ' + code + '!', 'info');
+              if (switchToViewerOnConnect) setViewMode('viewer');
+            }
+          }
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const env = JSON.parse(event.data);
+            handleIncomingRoomEnvelope(env, false);
+          } catch (e) {}
+        };
+
+        eventSource.onerror = () => {
+          // EventSource auto-retries; also enable light polling fallback so Safari never stalls
+          if (!openedOnce) {
+            setSyncStatus('connecting', 'Syncing (HTTPS)...');
+          }
+          startPollingFallback();
+        };
+      }
+
+      function startPollingFallback() {
+        if (pollIntervalId) return;
+        pollIntervalId = setInterval(() => {
+          if (state.syncRole !== 'standalone') {
+            pollLatestFromRoom(lastMessageId || '5m');
+          }
+        }, 2500);
+      }
+
+      function startHostingRoom() {
+        openRoomStream(state.roomCode, 'host', false);
+      }
+
+      function joinRoomByCode(rawCode, switchToViewer) {
+        const code = String(rawCode || '').replace(/[^0-9A-Za-z]/g, '').trim();
+        if (code.length < 4) {
+          showToast('Please enter the 4-digit Room Code from Tablet 1.', 'warn');
+          return;
+        }
+        els.joinCodeInput.value = code;
+        openRoomStream(code, 'client', switchToViewer);
+      }
+
+      function disconnectFromRoom() {
+        stopNetworkSync();
+        state.syncRole = 'standalone';
+        state.clockOffsetMs = 0;
+        els.disconnectRoomBtn.classList.add('hidden');
+        els.manualSyncBtn.classList.add('hidden');
+        els.viewerSyncNowBtn.classList.add('hidden');
+        els.viewerRoomTag.textContent = 'Local Display';
+        setSyncStatus('offline', 'Offline');
+        els.joinStatusNote.textContent = 'Disconnected. Enter a Room Code to join again.';
+        renderStaticControls();
+        showToast('Disconnected from room.', 'info');
+      }
+
+      function buildShareUrl() {
+        try {
+          if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('room', state.roomCode);
+            url.searchParams.set('role', 'viewer');
+            return url.toString();
+          }
+        } catch (e) {}
+        return 'Room Code: ' + state.roomCode;
+      }
+
+      function renderQRCode() {
+        els.qrCodeInlineText.textContent = state.roomCode;
+        els.qrCodeBox.innerHTML = '';
+        if (typeof QRCode === 'undefined') {
+          els.qrSection.classList.add('hidden');
+          return;
+        }
+        const shareStr = buildShareUrl();
+        try {
+          qrInstance = new QRCode(els.qrCodeBox, {
+            text: shareStr,
+            width: 96,
+            height: 96,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+          els.qrSection.classList.remove('hidden');
+        } catch (e) {
+          els.qrSection.classList.add('hidden');
+        }
+      }
+
+      function updatePeerListUI() {
+        const count = connectedPeers.size;
+        els.connectedCountBadge.textContent = count === 1 ? '1 tablet linked' : count + ' tablets linked';
+        els.peerList.innerHTML = '';
+        if (count === 0) {
+          const li = document.createElement('li');
+          li.className = 'italic text-slate-500';
+          li.textContent = state.syncRole === 'host'
+            ? 'Room ' + state.roomCode + ' is live. Enter ' + state.roomCode + ' on Tablet 2.'
+            : 'Tap "Go Live & Host" to start syncing over HTTPS.';
+          els.peerList.appendChild(li);
+          return;
+        }
+        connectedPeers.forEach((entry) => {
+          const li = document.createElement('li');
+          li.className = 'flex items-center justify-between py-1 px-2 rounded-lg bg-slate-900/90 text-slate-200';
+          li.innerHTML = '<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>' + escapeHtml(entry.name) + '</span><span class="text-[11px] text-emerald-400 font-semibold">Synced</span>';
+          els.peerList.appendChild(li);
+        });
       }
 
       function applyIncomingState(payload) {
@@ -958,7 +1263,6 @@
         state.overtime = !!payload.overtime;
         state.allowViewerControl = !!payload.allowViewerControl;
 
-        // Reset chime flags if timer was reset or extended above thresholds
         const remSec = getCurrentRemainingMs() / 1000;
         if (remSec > state.warnSec) state.warnChimeFired = false;
         if (remSec > 0) state.endChimeFired = false;
@@ -968,18 +1272,13 @@
       }
 
       function sendClientCommand(command, data) {
-        if (state.syncRole === 'client' && clientConn && clientConn.open) {
+        if (state.syncRole === 'client') {
           if (!state.allowViewerControl) {
             showToast('Controller has locked remote controls.', 'warn');
             return false;
           }
-          try {
-            clientConn.send({ type: 'CMD', command: command, data: data || {} });
-            return true;
-          } catch (e) {
-            showToast('Could not send command to Host.', 'error');
-            return false;
-          }
+          publishRoomMessage({ type: 'CMD', command: command, data: data || {}, sentAtEpochMs: Date.now() });
+          return true;
         }
         return false;
       }
@@ -1067,294 +1366,11 @@
         broadcastState();
       }
 
-      // -------------------- PEERJS WEBRTC SYNC --------------------
-      function setSyncStatus(mode, label) {
-        els.syncStatusText.textContent = label;
-        const dot = els.syncStatusDot;
-        const pill = els.syncStatusPill;
-        dot.className = 'w-2 h-2 rounded-full ';
-        pill.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ';
-        if (mode === 'live') {
-          dot.className += 'bg-emerald-400';
-          pill.className += 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
-        } else if (mode === 'connecting') {
-          dot.className += 'bg-amber-400 animate-pulse';
-          pill.className += 'bg-amber-500/15 text-amber-300 border-amber-500/40';
-        } else if (mode === 'error') {
-          dot.className += 'bg-rose-400';
-          pill.className += 'bg-rose-500/15 text-rose-300 border-rose-500/40';
-        } else {
-          dot.className += 'bg-slate-400';
-          pill.className += 'bg-slate-800 text-slate-300 border-slate-700';
-        }
-      }
-
-      function destroyPeer() {
-        if (reconnectTimer) {
-          clearTimeout(reconnectTimer);
-          reconnectTimer = null;
-        }
-        hostConnections.forEach((entry) => {
-          try { entry.conn.close(); } catch (e) {}
-        });
-        hostConnections.clear();
-        if (clientConn) {
-          try { clientConn.close(); } catch (e) {}
-          clientConn = null;
-        }
-        if (peer) {
-          try { peer.destroy(); } catch (e) {}
-          peer = null;
-        }
-        updatePeerListUI();
-      }
-
-      function buildShareUrl() {
-        try {
-          if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-            const url = new URL(window.location.href);
-            url.searchParams.set('room', state.roomCode);
-            url.searchParams.set('role', 'viewer');
-            return url.toString();
-          }
-        } catch (e) {}
-        return 'Room Code: ' + state.roomCode;
-      }
-
-      function renderQRCode() {
-        els.qrCodeInlineText.textContent = state.roomCode;
-        els.qrCodeBox.innerHTML = '';
-        if (typeof QRCode === 'undefined') {
-          els.qrSection.classList.add('hidden');
-          return;
-        }
-        const shareStr = buildShareUrl();
-        try {
-          qrInstance = new QRCode(els.qrCodeBox, {
-            text: shareStr,
-            width: 96,
-            height: 96,
-            colorDark: '#0f172a',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.M
-          });
-          els.qrSection.classList.remove('hidden');
-        } catch (e) {
-          els.qrSection.classList.add('hidden');
-        }
-      }
-
-      function startHostingRoom() {
-        if (typeof Peer === 'undefined') {
-          setSyncStatus('connecting', 'Local Mode');
-          showToast('Live WebRTC library unavailable offline. Open this file with internet access on both tablets to sync.', 'warn');
-          return;
-        }
-        destroyPeer();
-        state.syncRole = 'host';
-        setSyncStatus('connecting', 'Starting Room...');
-        els.startHostBtnText.textContent = 'Connecting...';
-
-        try {
-          peer = new Peer(ROOM_PREFIX + state.roomCode, { debug: 0 });
-        } catch (e) {
-          setSyncStatus('error', 'Local Mode');
-          els.startHostBtnText.textContent = 'Go Live & Host';
-          showToast('Could not start live room in this preview. Download/host the HTML file on your tablets.', 'warn');
-          return;
-        }
-
-        peer.on('open', () => {
-          setSyncStatus('live', 'Hosting ' + state.roomCode);
-          els.startHostBtnText.textContent = 'Room Live (' + state.roomCode + ')';
-          els.viewerRoomTag.textContent = 'Host • Room ' + state.roomCode;
-          renderQRCode();
-          updatePeerListUI();
-          showToast('Room ' + state.roomCode + ' is live! Enter this code on Tablet 2.', 'info');
-        });
-
-        peer.on('connection', (conn) => {
-          const deviceLabel = (conn.metadata && conn.metadata.device) ? conn.metadata.device : ('Tablet ' + (hostConnections.size + 1));
-          conn.on('open', () => {
-            hostConnections.set(conn.peer, { conn: conn, name: deviceLabel, connectedAt: Date.now() });
-            updatePeerListUI();
-            showToast(deviceLabel + ' connected!', 'info');
-            try { conn.send(buildStatePayload()); } catch (e) {}
-          });
-
-          conn.on('data', (msg) => {
-            if (!msg || typeof msg !== 'object') return;
-            if (msg.type === 'PING') {
-              try { conn.send({ type: 'PONG', clientSentMs: msg.clientSentMs, hostEpochMs: Date.now() }); } catch (e) {}
-            } else if (msg.type === 'REQUEST_STATE') {
-              try { conn.send(buildStatePayload()); } catch (e) {}
-            } else if (msg.type === 'CMD' && state.allowViewerControl) {
-              if (msg.command === 'TOGGLE') toggleStartPause();
-              else if (msg.command === 'RESET') resetTimer();
-              else if (msg.command === 'ADJUST' && msg.data) adjustSeconds(msg.data.deltaSec || 0);
-              else if (msg.command === 'SET_DURATION' && msg.data) setDurationSeconds(msg.data.totalSeconds || 300);
-            }
-          });
-
-          conn.on('close', () => {
-            hostConnections.delete(conn.peer);
-            updatePeerListUI();
-            showToast(deviceLabel + ' disconnected.', 'warn');
-          });
-
-          conn.on('error', () => {
-            hostConnections.delete(conn.peer);
-            updatePeerListUI();
-          });
-        });
-
-        peer.on('error', (err) => {
-          if (err && err.type === 'unavailable-id') {
-            state.roomCode = generateRoomCode();
-            els.hostRoomCode.textContent = state.roomCode;
-            els.splitRoomCodeBadge.textContent = 'Room ' + state.roomCode;
-            startHostingRoom();
-            return;
-          }
-          setSyncStatus('connecting', 'Local Mode');
-          els.startHostBtnText.textContent = 'Retry Hosting';
-          showToast('Live sync server unreachable here. Host this HTML file on your tablets to connect over Wi-Fi.', 'warn');
-        });
-      }
-
-      function detectDeviceName() {
-        const ua = navigator.userAgent || '';
-        if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
-        if (/Android/i.test(ua)) return 'Android Tablet';
-        if (/iPhone/i.test(ua)) return 'iPhone';
-        return 'Browser Display';
-      }
-
-      function joinRoomByCode(rawCode, switchToViewer) {
-        const code = String(rawCode || '').replace(/[^0-9A-Za-z]/g, '').trim();
-        if (code.length < 4) {
-          showToast('Please enter the 4-digit Room Code from Tablet 1.', 'warn');
-          return;
-        }
-        if (typeof Peer === 'undefined') {
-          showToast('Live WebRTC library unavailable offline. Connect to the internet on both tablets.', 'warn');
-          return;
-        }
-        destroyPeer();
-        state.syncRole = 'client';
-        state.roomCode = code;
-        els.joinCodeInput.value = code;
-        els.disconnectRoomBtn.classList.remove('hidden');
-        setSyncStatus('connecting', 'Joining ' + code + '...');
-        els.joinStatusNote.textContent = 'Connecting to Room ' + code + '...';
-
-        try {
-          peer = new Peer(undefined, { debug: 0 });
-        } catch (e) {
-          setSyncStatus('error', 'Connection Failed');
-          showToast('Could not initialize live sync in this environment.', 'warn');
-          return;
-        }
-
-        peer.on('open', () => {
-          const conn = peer.connect(ROOM_PREFIX + code, {
-            reliable: true,
-            metadata: { device: detectDeviceName() }
-          });
-          clientConn = conn;
-
-          conn.on('open', () => {
-            setSyncStatus('live', 'Synced • ' + code);
-            els.viewerRoomTag.textContent = 'Synced • Room ' + code;
-            els.joinStatusNote.textContent = 'Connected to Room ' + code + '. Receiving live updates.';
-            // Measure clock offset via ping/pong
-            try {
-              conn.send({ type: 'PING', clientSentMs: Date.now() });
-              conn.send({ type: 'REQUEST_STATE' });
-            } catch (e) {}
-            showToast('Synced to Room ' + code + '!', 'info');
-            if (switchToViewer) setViewMode('viewer');
-          });
-
-          conn.on('data', (msg) => {
-            if (!msg || typeof msg !== 'object') return;
-            if (msg.type === 'PONG') {
-              const now = Date.now();
-              const rtt = Math.max(0, now - msg.clientSentMs);
-              state.clockOffsetMs = (msg.hostEpochMs + rtt / 2) - now;
-            } else if (msg.type === 'STATE') {
-              applyIncomingState(msg);
-            } else if (msg.type === 'FLASH') {
-              triggerVisualFlash();
-            }
-          });
-
-          conn.on('close', () => {
-            if (state.syncRole === 'client') {
-              setSyncStatus('connecting', 'Reconnecting...');
-              els.joinStatusNote.textContent = 'Connection lost. Retrying Room ' + code + '...';
-              reconnectTimer = setTimeout(() => joinRoomByCode(code, false), 3500);
-            }
-          });
-
-          conn.on('error', () => {
-            setSyncStatus('error', 'Not Found');
-            els.joinStatusNote.textContent = 'Could not reach Room ' + code + '. Make sure Tablet 1 tapped "Go Live & Host".';
-          });
-        });
-
-        peer.on('error', () => {
-          setSyncStatus('error', 'Sync Offline');
-          els.joinStatusNote.textContent = 'Could not connect to Room ' + code + '. Check internet connection on both tablets.';
-        });
-      }
-
-      function disconnectFromRoom() {
-        destroyPeer();
-        state.syncRole = 'standalone';
-        state.clockOffsetMs = 0;
-        els.disconnectRoomBtn.classList.add('hidden');
-        els.viewerRoomTag.textContent = 'Local Display';
-        setSyncStatus('offline', 'Offline');
-        els.joinStatusNote.textContent = 'Disconnected. Enter a Room Code to join again.';
-        renderStaticControls();
-        showToast('Disconnected from room.', 'info');
-      }
-
-      function updatePeerListUI() {
-        const count = hostConnections.size;
-        els.connectedCountBadge.textContent = count === 1 ? '1 tablet linked' : count + ' tablets linked';
-        els.peerList.innerHTML = '';
-        if (count === 0) {
-          const li = document.createElement('li');
-          li.className = 'italic text-slate-500';
-          li.textContent = state.syncRole === 'host'
-            ? 'Waiting for Tablet 2 to join Room ' + state.roomCode + '...'
-            : 'Tap "Go Live & Host" to accept tablet connections.';
-          els.peerList.appendChild(li);
-          return;
-        }
-        hostConnections.forEach((entry) => {
-          const li = document.createElement('li');
-          li.className = 'flex items-center justify-between py-1 px-2 rounded-lg bg-slate-900/90 text-slate-200';
-          li.innerHTML = '<span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>' + escapeHtml(entry.name) + '</span><span class="text-[11px] text-emerald-400 font-semibold">Synced</span>';
-          els.peerList.appendChild(li);
-        });
-      }
-
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
-      }
-
       // -------------------- SAME-BROWSER MULTI-TAB SYNC --------------------
       function initBroadcastChannel() {
         if (typeof BroadcastChannel === 'undefined') return;
         try {
-          localChannel = new BroadcastChannel('synctimer_local_sync_v1');
+          localChannel = new BroadcastChannel('synctimer_local_sync_v2');
           localChannel.onmessage = (event) => {
             const data = event.data;
             if (!data || !data.payload) return;
@@ -1457,7 +1473,6 @@
           els.splitStartPauseBtn.className = 'col-span-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm';
         }
 
-        // Labels & Messages
         els.controllerLabelPreview.textContent = state.label;
         els.viewerLabel.textContent = state.label;
         els.splitControllerLabel.textContent = state.label;
@@ -1469,15 +1484,12 @@
         els.splitViewerBanner.textContent = state.message;
         els.splitViewerBanner.classList.toggle('hidden', !hasMsg);
 
-        // Viewer remote controls visibility
         const canControlInViewer = state.syncRole !== 'client' || state.allowViewerControl;
         els.viewerRemoteControls.classList.toggle('hidden', !canControlInViewer);
         els.viewerReadOnlyHint.classList.toggle('hidden', canControlInViewer);
 
-        // Sub status
         els.controllerSubStatus.textContent = 'Target: ' + formatTimeMs(state.durationMs) + ' • Amber at ' + formatTimeMs(state.warnSec * 1000) + ' • Red at ' + formatTimeMs(state.critSec * 1000);
 
-        // Sound button visual
         els.soundToggleBtn.classList.toggle('text-slate-500', !state.soundEnabled);
         els.soundToggleBtn.classList.toggle('text-emerald-400', state.soundEnabled);
       }
@@ -1493,7 +1505,6 @@
         const remSec = remMs / 1000;
         const formatted = formatTimeMs(remMs);
 
-        // Auto-stop if overtime disabled and reached 0
         if (state.status === 'running' && !state.overtime && remMs <= 0) {
           state.remainingMs = 0;
           state.targetEndEpochMs = null;
@@ -1502,7 +1513,6 @@
           if (state.syncRole === 'host') broadcastState();
         }
 
-        // Audio chime triggers
         if (state.status === 'running') {
           if (!state.warnChimeFired && state.warnSec > 0 && remSec <= state.warnSec && remSec > 0) {
             state.warnChimeFired = true;
@@ -1514,19 +1524,16 @@
           }
         }
 
-        // Determine color phase
         let phase = 'normal';
         if (remMs <= 0) phase = 'overtime';
         else if (state.critSec > 0 && remSec <= state.critSec) phase = 'critical';
         else if (state.warnSec > 0 && remSec <= state.warnSec) phase = 'warning';
 
-        // Update digits
         els.controllerTimeDisplay.textContent = formatted;
         els.viewerTimeDisplay.textContent = formatted;
         els.splitControllerTime.textContent = formatted;
         els.splitViewerTime.textContent = formatted;
 
-        // Color styling by phase
         const textCls = phase === 'overtime'
           ? 'text-rose-400 overtime-pulse'
           : phase === 'critical'
@@ -1548,7 +1555,6 @@
 
         els.viewerOvertimeTag.classList.toggle('hidden', remMs >= 0);
 
-        // Progress bar width
         const pct = state.durationMs > 0
           ? Math.max(0, Math.min(100, (remMs / state.durationMs) * 100))
           : 0;
@@ -1559,7 +1565,6 @@
           bar.className = 'h-full transition-all duration-150 rounded-full ' + barCls;
         });
 
-        // State Badge
         if (state.status === 'running') {
           els.stateBadge.textContent = remMs < 0 ? 'Overtime' : 'Running';
           els.stateBadge.className = 'px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ' +
@@ -1645,7 +1650,8 @@
           state.label = els.timerLabelInput.value.trim() || 'Presentation Timer';
           savePrefs();
           renderStaticControls();
-          broadcastState();
+          if (labelDebounceTimer) clearTimeout(labelDebounceTimer);
+          labelDebounceTimer = setTimeout(() => broadcastState(), 350);
         });
 
         els.sendMessageBtn.addEventListener('click', () => {
@@ -1707,6 +1713,20 @@
         });
         els.disconnectRoomBtn.addEventListener('click', disconnectFromRoom);
 
+        const handleManualSync = async () => {
+          const ok = await pollLatestFromRoom('20m');
+          showToast(ok ? 'Synced with latest timer state.' : 'Could not reach sync server.', ok ? 'info' : 'warn');
+        };
+        els.manualSyncBtn.addEventListener('click', handleManualSync);
+        els.viewerSyncNowBtn.addEventListener('click', handleManualSync);
+
+        // Auto re-sync when tablet wakes up from sleep
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible' && state.syncRole !== 'standalone') {
+            pollLatestFromRoom('10m');
+          }
+        });
+
         // Toolbar utilities
         els.soundToggleBtn.addEventListener('click', () => {
           state.soundEnabled = !state.soundEnabled;
@@ -1726,7 +1746,6 @@
           if (e.target === els.helpModal) els.helpModal.classList.add('hidden');
         });
 
-        // Keyboard shortcuts (Space = Start/Pause, R = Reset) when not typing
         document.addEventListener('keydown', (e) => {
           const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
           if (tag === 'input' || tag === 'textarea') return;
