@@ -40,18 +40,46 @@
     }
 
     .timer-display-huge {
-      font-size: clamp(3.5rem, 15vw, 11.5rem);
-      line-height: 1;
+      font-size: clamp(4.5rem, 21vw, 16rem);
+      line-height: 0.96;
     }
 
     .timer-display-controller {
-      font-size: clamp(3rem, 9vw, 6.25rem);
-      line-height: 1.05;
+      font-size: clamp(3.75rem, 11.5vw, 8.25rem);
+      line-height: 1;
     }
 
     .timer-display-mini {
-      font-size: clamp(2.25rem, 5.5vw, 4.25rem);
+      font-size: clamp(2.75rem, 6.8vw, 5.25rem);
+      line-height: 1;
+    }
+
+    .callout-text-huge {
+      font-size: clamp(2.5rem, 10.5vw, 7.5rem);
       line-height: 1.05;
+    }
+
+    .callout-text-controller {
+      font-size: clamp(1.75rem, 5.2vw, 3.75rem);
+      line-height: 1.1;
+    }
+
+    @keyframes calloutPop {
+      0% { opacity: 0; transform: scale(0.92); }
+      12% { opacity: 1; transform: scale(1.02); }
+      20% { opacity: 1; transform: scale(1); }
+      88% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.98); }
+    }
+
+    .callout-solid {
+      background-color: #f59e0b;
+      color: #070b14;
+      z-index: 20;
+    }
+
+    .callout-active {
+      animation: calloutPop 2.5s ease-in-out forwards;
     }
 
     .glass-card {
@@ -187,9 +215,13 @@
           </div>
 
           <!-- Huge Digital Readout -->
-          <div class="text-center my-3 sm:my-5 select-none">
-            <div id="controllerTimeDisplay" class="tabular-digits timer-display-controller font-extrabold text-white tracking-tight transition-colors">
+          <div class="text-center my-3 sm:my-5 select-none relative">
+            <div id="controllerTimeDisplay" class="tabular-digits timer-display-controller font-extrabold text-white tracking-tight transition-opacity duration-200">
               05:00
+            </div>
+            <!-- 2.5s Solid High-Contrast Chime Phrase Overlay (timer keeps ticking continuously behind it) -->
+            <div id="controllerCalloutOverlay" class="hidden callout-solid pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-4 border-amber-200 px-4 shadow-2xl">
+              <span id="controllerCalloutText" class="callout-text-controller font-black uppercase tracking-tight text-slate-950">5 MINUTES LEFT</span>
             </div>
             <div id="controllerSubStatus" class="mt-2 text-xs sm:text-sm text-slate-400 font-medium">
               Target: 05:00 &bull; Amber at 01:00 &bull; Red at 00:15
@@ -513,9 +545,13 @@
       </div>
 
       <!-- Center Countdown -->
-      <div class="my-auto py-8 text-center select-none">
-        <div id="viewerTimeDisplay" class="tabular-digits timer-display-huge font-extrabold text-white tracking-tight transition-colors">
+      <div class="my-auto py-8 text-center select-none relative">
+        <div id="viewerTimeDisplay" class="tabular-digits timer-display-huge font-extrabold text-white tracking-tight transition-opacity duration-200">
           05:00
+        </div>
+        <!-- 2.5s Solid Full-Stage Chime Phrase Overlay (timer runs continuously behind it) -->
+        <div id="viewerCalloutOverlay" class="hidden callout-solid pointer-events-none absolute inset-0 flex flex-col items-center justify-center rounded-3xl border-4 border-amber-200 px-6 shadow-2xl">
+          <span id="viewerCalloutText" class="callout-text-huge font-black uppercase tracking-tight text-slate-950">5 MINUTES LEFT</span>
         </div>
         <div id="viewerOvertimeTag" class="hidden mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-rose-500/20 border border-rose-500/50 text-rose-300 text-sm sm:text-base font-extrabold uppercase tracking-widest">
           Overtime
@@ -616,9 +652,12 @@
             <span class="text-[11px] font-semibold text-emerald-400">In Sync &bull; 0ms</span>
           </div>
 
-          <div class="text-center my-auto py-4">
+          <div class="text-center my-auto py-4 relative">
             <div id="splitViewerLabel" class="text-base sm:text-lg font-bold text-slate-300 mb-2">Presentation Timer</div>
             <div id="splitViewerTime" class="tabular-digits timer-display-mini font-extrabold text-white">05:00</div>
+            <div id="splitViewerCalloutOverlay" class="hidden callout-solid pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-4 border-amber-200 px-3 shadow-2xl">
+              <span id="splitViewerCalloutText" class="text-2xl sm:text-4xl font-black uppercase tracking-tight text-slate-950">5 MINUTES LEFT</span>
+            </div>
             <div id="splitViewerBanner" class="hidden mt-3 px-4 py-2 rounded-xl bg-indigo-500/20 border border-indigo-400/40 text-indigo-100 text-sm font-bold"></div>
           </div>
 
@@ -732,6 +771,7 @@
       let localChannel = null;
       let rafId = null;
       let labelDebounceTimer = null;
+      let calloutHideTimer = null;
 
       // -------------------- DOM REFS --------------------
       const els = {
@@ -763,6 +803,8 @@
         offsetBadge: document.getElementById('offsetBadge'),
         localClockDisplay: document.getElementById('localClockDisplay'),
         controllerTimeDisplay: document.getElementById('controllerTimeDisplay'),
+        controllerCalloutOverlay: document.getElementById('controllerCalloutOverlay'),
+        controllerCalloutText: document.getElementById('controllerCalloutText'),
         controllerSubStatus: document.getElementById('controllerSubStatus'),
         controllerProgressBar: document.getElementById('controllerProgressBar'),
         startPauseBtn: document.getElementById('startPauseBtn'),
@@ -820,6 +862,8 @@
         viewerRoomTag: document.getElementById('viewerRoomTag'),
         viewerClock: document.getElementById('viewerClock'),
         viewerTimeDisplay: document.getElementById('viewerTimeDisplay'),
+        viewerCalloutOverlay: document.getElementById('viewerCalloutOverlay'),
+        viewerCalloutText: document.getElementById('viewerCalloutText'),
         viewerOvertimeTag: document.getElementById('viewerOvertimeTag'),
         viewerMessageBanner: document.getElementById('viewerMessageBanner'),
         viewerProgressBar: document.getElementById('viewerProgressBar'),
@@ -843,6 +887,8 @@
         splitViewerFrame: document.getElementById('splitViewerFrame'),
         splitViewerLabel: document.getElementById('splitViewerLabel'),
         splitViewerTime: document.getElementById('splitViewerTime'),
+        splitViewerCalloutOverlay: document.getElementById('splitViewerCalloutOverlay'),
+        splitViewerCalloutText: document.getElementById('splitViewerCalloutText'),
         splitViewerBanner: document.getElementById('splitViewerBanner'),
         splitViewerBar: document.getElementById('splitViewerBar')
       };
@@ -1234,6 +1280,48 @@
           els.splitViewerFrame.classList.add('flash-alert');
         }
         playChime('warn');
+      }
+
+      function formatChimeCalloutText(totalSec) {
+        const s = Math.max(1, Math.round(totalSec));
+        if (s >= 60 && s % 60 === 0) {
+          const mins = s / 60;
+          return mins === 1 ? '1 MINUTE LEFT' : (mins + ' MINUTES LEFT');
+        }
+        if (s < 60) {
+          return s === 1 ? '1 SECOND LEFT' : (s + ' SECONDS LEFT');
+        }
+        const mins = Math.floor(s / 60);
+        const rem = s % 60;
+        return mins + ' MIN ' + rem + ' SEC LEFT';
+      }
+
+      function showChimeCallout(markSec) {
+        const phrase = formatChimeCalloutText(markSec);
+        if (calloutHideTimer) {
+          clearTimeout(calloutHideTimer);
+          calloutHideTimer = null;
+        }
+        const pairs = [
+          [els.controllerCalloutOverlay, els.controllerCalloutText],
+          [els.viewerCalloutOverlay, els.viewerCalloutText],
+          [els.splitViewerCalloutOverlay, els.splitViewerCalloutText]
+        ];
+        pairs.forEach(([overlay, textEl]) => {
+          if (!overlay || !textEl) return;
+          textEl.textContent = phrase;
+          overlay.classList.remove('hidden', 'callout-active');
+          void overlay.offsetWidth;
+          overlay.classList.add('callout-active');
+        });
+        calloutHideTimer = setTimeout(() => {
+          pairs.forEach(([overlay]) => {
+            if (!overlay) return;
+            overlay.classList.add('hidden');
+            overlay.classList.remove('callout-active');
+          });
+          calloutHideTimer = null;
+        }, 2500);
       }
 
       // -------------------- PERSISTENCE --------------------
@@ -1880,6 +1968,7 @@
                 state.firedChimeMarks.add(markSec);
                 if (remSec > markSec - 1.5) {
                   playChime(state.chimeSoundType);
+                  showChimeCallout(markSec);
                 }
               }
             }
@@ -2078,8 +2167,10 @@
             renderStaticControls();
           }
           playChime(state.chimeSoundType, true);
+          const previewSec = state.chimeMarksSec.length ? state.chimeMarksSec[0] : 30;
+          showChimeCallout(previewSec);
           const names = { bell: 'Desk Bell (Quick)', chime: 'Soft Chime (Quick)', beep: 'Broadcast Beep (Quick)', gong2s: 'Resonant Bell (2s)', alert3s: 'Attention Chime (3s)', triplebell3s: 'Triple Desk Bell (3s)', buzzer3s: 'Timekeeper Pulse (3s)', gong3s: 'Deep Conference Gong (3s)' };
-          showToast((names[state.chimeSoundType] || 'Chime') + ' tested (audio unlocked).', 'info');
+          showToast((names[state.chimeSoundType] || 'Chime') + ' & callout tested.', 'info');
         });
 
         els.timerLabelInput.addEventListener('input', () => {
